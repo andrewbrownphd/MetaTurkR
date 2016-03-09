@@ -1,0 +1,18 @@
+Package: MetaTurkR
+Type: Package
+Title: Functions to Support Metaresearch with MTurkR
+Description: A series of functions meant to support the use of R for meta-research.
+              heavily employs MTurkR as its backbone. Additional functions are used
+              for scraping and formatting data.
+Version: 0.1
+Date: 2016-03-04
+Author: Andrew W Brown
+Maintainer: Andrew W Brown <awbrown@uab.edu>
+License: MIT
+Imports:
+    stringi,
+    stringr,
+    MTurkR
+RoxygenNote: 5.0.1
+Suggests: rentrez,
+    XML
