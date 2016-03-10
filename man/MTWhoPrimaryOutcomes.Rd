@@ -4,7 +4,7 @@
 \alias{MTWhoPrimaryOutcomes}
 \title{Extract Primary Outcomes from WHO trial database}
 \usage{
-MTWhoPrimaryOutcomes(registryNumber = NULL, unique = TRUE)
+MTWhoPrimaryOutcomes(registryNumber = NULL, quiet = TRUE)
 }
 \arguments{
 \item{registryNumber}{A registry number. Various registry string types work, e.g.:
@@ -13,7 +13,7 @@ MTWhoPrimaryOutcomes(registryNumber = NULL, unique = TRUE)
 \item{ISRCTN30870177}
 }}
 
-\item{unique}{Logical. Default is \code{TRUE}. Removes multiple primary outcomes that are exact duplicates.}
+\item{quiet}{Logical. If \code{FALSE}, additional messages should print.}
 }
 \value{
 Returns a named vector the length of and with names derived from
@@ -23,7 +23,10 @@ Returns a named vector the length of and with names derived from
 This method extracts the HTML elements associated with primary outcomes in the
  WHO trial database, which also pulls in records from additional registries.
  Primary outcomes are denoted by \code{DataList12} in the HTML table. Multiple
- entries are tab delimited.
+ entries are tab delimited. \cr
+ Although the WHO search allows searching multiple registries at once,
+ it is slow, and often times out. Use of \code{MTClinicalTrials} is
+ much faster when needed.
 }
 \details{
 More details to come.
