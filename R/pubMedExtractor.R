@@ -102,6 +102,9 @@ MTPubMed <- function(pmids = NULL,
   return(pmOut)
 }
 
+
+
+
 #----------------------
 #' Extract Primary Outcomes from ClinicalTrials.gov
 #'
@@ -284,7 +287,7 @@ MTPrimaryOutcomes <- function(registryNumber = NULL,
 {
   if(is.null(registryNumber)) stop("Must specify at least one registry number.")
   regOut <- array(NA,length(registryNumber))
-  names(regOut) <- row.names(registryNumber)
+  names(regOut) <- registryNumber
 
   regNos <- strsplit(registryNumber, ", ")
 
@@ -306,8 +309,12 @@ MTPrimaryOutcomes <- function(registryNumber = NULL,
                                   quiet=quiet)
   #!insert code for ISRCTN, if we get access to the API
 
-  #send the rest to the WHO, which will likely fail
-  regOut[-c(multiRegIndex,nct)] <- MTWhoPrimaryOutcomes(registryNumber = registryNumber[-c(multiRegIndex,nct)],
-                                                        quiet=quiet)
+  remaining <- c(multiRegIndex,nct)
+  if(length(regOut[-remaining]) > 0)
+    #send the rest to the WHO, which will likely fail
+    regOut[-remaining] <- MTWhoPrimaryOutcomes(registryNumber = registryNumber[-c(multiRegIndex,nct)],
+                                               quiet=quiet)
+
+  return(regOut)
 
 }
