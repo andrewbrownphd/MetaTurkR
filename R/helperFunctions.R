@@ -71,6 +71,106 @@ MTXPath <- function (doc, tag, sep = ", ", fnxn = "xmlValue"){
 }
 
 #############################################################
+####  Replace problem characters with HTML escapes       ####
+#-----------------------------------------------------------#
+MTCharHack <- function(inp,charMat = NULL)
+{
+  if(is.null(charMat))
+    charMat <- matrix(c(
+      #Add more pairs of "special characters", "encodings" here:
+      "&","&amp;",
+      #Weird problems...
+      "Â±","&#177;",
+      "Ã·","&divide;",
+      "Ã -","&times;",
+      "Â "," ",#strange space issue next to some numbers
+      "<U+03C7>","&chi;",
+      "<U+1E3F>","&#x1e3f;",
+      "§ssup§","<sup>",
+      "§esup§","</sup>",
+      "§ssub§","<sub>",
+      "§esub§","</sub>",
+      "§ esup§","</sup>",
+      "Ã©","&eacute;",
+      "â¿¥",">",
+      "â¿¿","",#string after numbered list in proquest...
+      "\u{00ad}","",#soft hyphens SUCK
+      #Standard character replacement
+      "<","&lt;",
+      ">","&gt;",
+      "‘","&#8216;",
+      "’","&#8217;",
+      "©","&#169;",
+      "æ","&#230;",
+      "±","&#177;",
+      "µ","&#181;",
+      "ß","&#223;",
+      "£","&pound;",
+      "¦","&brvbar;",
+      "²","&sup2;",
+      "®","&reg;",
+      "™","&trade;",
+      " ","&nbsp;",
+      "–","-", #beginning guarded area; changed to hyphen
+      "—","-", #end guarded area; changed to hyphen
+      "¯","&macr;",
+      "¿","\'", #Messed up close quote; this makes the hack problematic for languages that use ¿
+      "˜","&tilde;",
+      "’","\'",
+      "×","&times;",
+      "“","&ldquo;",
+      "”","&rdquo;",
+      "‰","&permil;",
+      "•","&bull;",
+      "·","&middot;",
+      "»","&raquo;",
+      "«","&laquo;",
+      "°","&deg;",
+      "´","&acute;",
+      #Foreign characters
+      "à","&agrave;",
+      "á","&aacute;",
+      "å","&aring;",
+      "ä","&auml;",
+      "â","&acirc;",
+      "ã","&atilde;",
+      "Å","&Aring;",
+      "Á","&Aacute;",
+      "é","&eacute;",
+      "è","&egrave;",
+      "ê","&ecirc;",
+      "í","&iacute;",
+      "ï","&iuml;",
+      "Í","&Iacute;",
+      "Ö","&Ouml;",
+      "Ø","&Oslash;",
+      "ø","&oslash;",
+      "Ó","&Oacute;",
+      "ó","&oacute;",
+      "ö","&ouml;",
+      "ô","&ocirc;",
+      "õ","&otilde;",
+      "ú","&uacute;",
+      "ü","&uuml;",
+      "Ü","&Uuml;",
+      "ç","&ccedil;",
+      "ñ","&ntilde;",
+      "ý","&yacute;",
+      "š","&scaron;",
+      "ž","&zcaron;"
+    ),
+    ncol = 2, byrow=T)
+  for (i in 1:nrow(charMat))
+  {
+    inp <- gsub(pattern = charMat[i,1],
+                replacement = charMat[i,2],
+                inp)
+  }
+
+  return(inp)
+}
+
+#############################################################
 ####  Replace HTML with data; fields marked with ${...}  ####
 #-----------------------------------------------------------#
 HTMLWithParms <- function(HTMLStringP, content, parmNames=NULL)
@@ -85,9 +185,10 @@ HTMLWithParms <- function(HTMLStringP, content, parmNames=NULL)
 
   for(j in 1:length(content))
   {
-    HTMLStringP <- stringi::stri_replace_all_fixed(HTMLStringP,
-                                                   paste0("${",parmNames[j],"}"),
-                                                   content[j])
+    HTMLStringP <- gsub(pattern = paste0("${",parmNames[j],"}"),
+                        replacement = content[j],
+                        x = HTMLStringP,
+                        fixed = TRUE)
   }
 
   return(HTMLStringP)
