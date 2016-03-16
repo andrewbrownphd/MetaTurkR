@@ -20,7 +20,7 @@ AssembleMultiTab <- function(ansVars=NULL,
              "exampleShell.html",
              "exampleTab.html",
              "multiTabShell.html",
-             "checkanswers.js",
+             "checkAnswers.js",
              "skipPattern.js",
              "outerScript.js"
   )
