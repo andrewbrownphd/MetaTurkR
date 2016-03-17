@@ -10,8 +10,6 @@ Author: Andrew W Brown
 Maintainer: Andrew W Brown <awbrown@uab.edu>
 License: MIT
 Imports:
-    stringi,
-    stringr,
     MTurkR
 RoxygenNote: 5.0.1
 Suggests: rentrez,
