@@ -73,7 +73,7 @@ MTXPath <- function (doc, tag, sep = ", ", fnxn = "xmlValue"){
 #############################################################
 ####  Replace problem characters with HTML escapes       ####
 #-----------------------------------------------------------#
-MTCharHack <- function(inp,charMat = NULL)
+MTCharHack <- function(inp,charMat = NULL,quiet = TRUE)
 {
 
   charMat <- matrix(c(
@@ -103,7 +103,7 @@ MTCharHack <- function(inp,charMat = NULL)
 
       i <- regexpr(pattern=pattern,
                    text = inp[a])
-      # print(i)
+      if(!quiet) print(i)
     }
 
     for (i in 1:nrow(charMat))
