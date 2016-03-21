@@ -25,6 +25,9 @@ assigned to each element of \code{questionNames}.}
 
 \item{NAValue}{The value to replace NAs with.}
 }
+\value{
+Returns the full inputted \code{results} object appended with scores.
+}
 \description{
 Function to score known answers
 }

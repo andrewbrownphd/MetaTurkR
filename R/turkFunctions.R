@@ -2,10 +2,7 @@
 #'
 #' Sets \code{MTurkR.sandbox} to \code{TRUE}; imports credentials with \code{MTSetCred}; and returns the live account balance.
 #' @return Prints the live account balance associated with the credentials file.
-
-###################################
-#Setup the credentials and settings
-###################################
+#'
 MTsetup <- function()
 {
   #Set to sandbox by default
@@ -45,7 +42,7 @@ MTSetCred <- function(filename = paste0("src/credentials.txt"))
 ############################################
 #Get results and common summaries
 ############################################
-GetHITSet <- function(HITTypeId,sandbox=TRUE)
+MTGetHITSet <- function(HITTypeId,sandbox=TRUE)
 {
   HITSet <- MTurkR::SearchHITs(sandbox=sandbox)
   HITSet <- HITSet$HITs[which(HITSet$HITs$HITTypeId == HITTypeId),]
@@ -58,10 +55,29 @@ GetHITSet <- function(HITTypeId,sandbox=TRUE)
   return(HITSet)
 }
 
-GetAllResults <- function(HITTypeId, reward=NULL, sandbox=TRUE)
+
+#------------------------------------
+#' Get results for a given HITTypeId
+#'
+#' Function returns the results of a given HITTypeId.
+#'
+#' @param HITTypeId REQUIRED. The HITTypeId for the HITs to be returned.
+#' @param reward The amount in dollars that microworkers are rewarded. This is used as a convenient means of returning
+#' the average hourly rate.
+#' @param sandbox Default is \code{TRUE}. Tells the functions whether to operate on the
+#' live or sandbox Mechanical Turk sites.
+#'
+#' @return Returns the results of HITs that are part of the HITTypeId. Also prints the hourly rate and the
+#' percent completed.
+#'
+MTGetHITTypeResults <- function(HITTypeId = NULL,
+                                reward=NULL,
+                                sandbox=TRUE)
 {
+  if(is.null(HITTypeId)) stop("HITTypeId is required.")
   #!#REDO THIS WITH AN OPTION TO ONLY GET INCOMPLETE HITS#!#
-  HITSet <- GetHITSet(HITTypeId=HITTypeId,sandbox=sandbox)
+  HITSet <- MTGetHITSet(HITTypeId=HITTypeId,
+                        sandbox=sandbox)
 
   results <- MTurkR::GetAssignments(hit.type = HITTypeId,sandbox=sandbox)
   if(!is.null(reward))  HourlyRate(results,reward)
@@ -70,7 +86,7 @@ GetAllResults <- function(HITTypeId, reward=NULL, sandbox=TRUE)
   return(results)
 }
 
-HourlyRate <- function(results,reward)
+MTHourlyRate <- function(results,reward)
 {
   hourlyRate <- (3600/mean(results$SecondsOnHIT[which(results$AssignmentStatus != "Rejected")]))*reward
   print(paste0("The average Hourly Rate for non-rejected HITs is $",round(hourlyRate,2)))
@@ -80,9 +96,9 @@ HourlyRate <- function(results,reward)
 ############################################
 #Get Data Summary
 ############################################
-HITResultsSummary <- function(results, resultsCols=NULL,noRejects=TRUE,
-                              minAssignments=1,minAgreement=0.5,
-                              extend=F,maxAssignments=NULL,sandbox=TRUE)
+MTHITResultsSummary <- function(results, resultsCols=NULL,noRejects=TRUE,
+                                minAssignments=1,minAgreement=0.5,
+                                extend=F,maxAssignments=NULL,sandbox=TRUE)
 {
   if(extend == T & is.null(maxAssignments)) stop("Max Assignments must be declared if extending HITs.")
   if(extend == T & noRejects == F) stop("Cannot extend HITs when including rejected assignments.")
@@ -183,19 +199,19 @@ HITResultsSummary <- function(results, resultsCols=NULL,noRejects=TRUE,
     if(!is.null(hitsToExtend))
     {
       warning("Extension is currently unavailable.")
-#       cont <- ""
-#       while(!(cont %in% c("Y","N")))
-#       {
-#         cont <- readline(paste(length(hitsToExtend),"assignments are about to be extended. Continue? (Y/N)"))
-#         hitsToExtendGlobal <<- hitsToExtend
-#       }
-#       if(cont == "Y")
-#       {
-#         MTurkR::ExtendHIT(hit = hitsToExtend,add.assignments = 1, add.seconds = seconds(days = 1),sandbox=sandbox)
-#         warning("DON'T FORGET TO REDOWNLOAD RESULTS AFTER EXTENDING!!")
-#       }
-#     } else {
-#       warning("No HITs to Extend.")
+      #       cont <- ""
+      #       while(!(cont %in% c("Y","N")))
+      #       {
+      #         cont <- readline(paste(length(hitsToExtend),"assignments are about to be extended. Continue? (Y/N)"))
+      #         hitsToExtendGlobal <<- hitsToExtend
+      #       }
+      #       if(cont == "Y")
+      #       {
+      #         MTurkR::ExtendHIT(hit = hitsToExtend,add.assignments = 1, add.seconds = seconds(days = 1),sandbox=sandbox)
+      #         warning("DON'T FORGET TO REDOWNLOAD RESULTS AFTER EXTENDING!!")
+      #       }
+      #     } else {
+      #       warning("No HITs to Extend.")
     }
 
   outcomesList[["outcomes"]] <- outcomes
@@ -205,11 +221,35 @@ HITResultsSummary <- function(results, resultsCols=NULL,noRejects=TRUE,
 ############################################
 #Reject responses with NAs
 ############################################
-RejectNAs <- function(results,resultsCols=NULL,extendRejects=1,sandbox=TRUE)
+#' A convenience function to reject results with NAs.
+#'
+#' This function rejects work that has NAs as results. This can be useful for situations where a microworker's browser
+#' manages to circumvent required HTML tags, or when microworkers are explicitly told which questions to complete
+#' and yet the microworker submits work with non-completed fields.
+#'
+#' @param results A results object returned by e.g. \code{MTGetHITTypeResults}. REQUIRED.
+#' @param resultsCols The names of the columns in \code{results} to look for NAs. If \code{resultsCols} is not defined,
+#' it defaults to taking all of the response columns in a standard \code{results} object (columns 31+).
+#' @param extendRejects Declares how many assignments should be added to rejected HIT assignments. Default is 1.
+#' @param continue An option of whether to proceed with rejection and extension without review. Default is 'wait', and
+#' input values are 'Y', which will proceed without review, and 'N' which will terminate the function.
+#' @param sandbox Default is \code{TRUE}. Defines whether to work on live or sandbox Mechanical Turk site.
+#'
+#' @details This function looks in the results object for non-rejected assignments, looks for NA responses, and rejects
+#' assignments as appropriate. Prior to rejecting the HITs, the function will ask for confirmation.
+#'
+#' @return Returns the new rejects, unless the function is terminated which returns \code{NULL}, or if there are no new
+#' rejects, it prints "No new assignments to reject."
+#'
+MTRejectNAs <- function(results,
+                        resultsCols=NULL,
+                        extendRejects=1,
+                        continue = "wait",
+                        sandbox=TRUE)
 {
   if(is.null(resultsCols)) resultsCols <- 31:dim(results)[2]
 
-  #Automatically ignores 'NA' assignments
+  #Automatically ignores rejected assignments
   nonRejects <- results[which(results$AssignmentStatus!="Rejected"),]
 
   rejectNewNAs <- sapply(1:dim(nonRejects)[1],function(x)
@@ -218,28 +258,33 @@ RejectNAs <- function(results,resultsCols=NULL,extendRejects=1,sandbox=TRUE)
   newRejectCount <- dim(nonRejects$AssignmentId[rejectNewNAs])[1]
 
   if(!is.null(newRejectCount)){
-    cont <- ""
-    while(!(cont %in% c("Y","N"))){
-      cont <- readline(paste(newRejectCount,"assignments are about to be rejected and extended by",
-                             extendRejects,"assignments each. Continue? (Y/N)"))
+    print(paste(newRejectCount,
+                "assignments are about to be rejected and extended by",
+                extendRejects,
+                "assignments each. Continue? (Y/N)"))
+    while(!(continue %in% c("Y","N"))){
+      continue <- readline()
     }
-    if(cont == "Y"){
-      newRejects <- MTurkR::RejectAssignment(nonRejects$AssignmentId[rejectNewNAs],feedback = "At least one of the required responses was not answered.")
+    if(continue == "Y"){
+      newRejects <- MTurkR::RejectAssignment(nonRejects$AssignmentId[rejectNewNAs],
+                                             feedback = "At least one of the required responses was not answered.")
+
+      if(extendRejects>0) MTurkR::ExtendHIT(hit = nonRejects$HITId[rejectNewNAs], add.assignments=extendRejects)
+
+      return(newRejects)
     }
   } else {
     warning("No new assignments to reject.")
     return(NULL)
   }
-  if(extendRejects>0) MTurkR::ExtendHIT(hit = nonRejects$HITId[rejectNewNAs], add.assignments=1)
-  return(newRejects)
 }
 
 ########################################################
 #Approve assignments and count additional qualifications
 ########################################################
-ApproveCountBonus <- function(results=NULL, sandbox=TRUE,
-                              bonusThreshold=NULL, bonusAmount=NULL,
-                              qualType=NULL)
+MTApproveCountBonus <- function(results=NULL, sandbox=TRUE,
+                                bonusThreshold=NULL, bonusAmount=NULL,
+                                qualType=NULL)
 {
   if(is.null(results)) stop("Must declare results to approve.")
   if(is.null(bonusThreshold) != is.null(bonusAmount)) stop("Must set both or neither bonus parameters.")
@@ -310,12 +355,12 @@ ApproveCountBonus <- function(results=NULL, sandbox=TRUE,
   {
     #Approve workerResults
     approved <- MTurkR::ApproveAssignment(results$AssignmentId,
-                                  feedback = "Thank you.",
-                                  sandbox = sandbox)
+                                          feedback = "Thank you.",
+                                          sandbox = sandbox)
 
     #update qualCount
     MTurkR::UpdateQualificationScore(qual=qualCounter,workers=names(newCount),
-                             sandbox=sandbox,value=as.character(newCount))
+                                     sandbox=sandbox,value=as.character(newCount))
 
     #Apply bonus if appropriate
     if(!is.null(bonusThreshold) & length(bonusWorkers)>0)
@@ -323,11 +368,11 @@ ApproveCountBonus <- function(results=NULL, sandbox=TRUE,
       for(i in bonusWorkers)
       {
         MTurkR::GrantBonus(workers=i,
-                   #grab last assignment completed in this group of approvals
-                   assignments=results$AssignmentId[which(results$WorkerId == i)][addCount[i]],
-                   amounts = bonusAmount,
-                   reasons = paste("Thank you for completing",bonusThreshold,"HITs!"),
-                   sandbox=sandbox
+                           #grab last assignment completed in this group of approvals
+                           assignments=results$AssignmentId[which(results$WorkerId == i)][addCount[i]],
+                           amounts = bonusAmount,
+                           reasons = paste("Thank you for completing",bonusThreshold,"HITs!"),
+                           sandbox=sandbox
         )
       }
     }
@@ -344,8 +389,8 @@ ApproveCountBonus <- function(results=NULL, sandbox=TRUE,
 # NoConsensus - Number of HITs with no consensus, weighted for multiple questions
 # Total - Total number of HITs the worker has completed
 ###################################################
-WorkerPerformance <- function(results,resultCols=NULL,
-                              cutoff = 0.5,workerRatings = NULL)
+MTWorkerPerformance <- function(results,resultCols=NULL,
+                                cutoff = 0.5,workerRatings = NULL)
 {
   #Check the WorkerRating input
   if(is.null(workerRatings))

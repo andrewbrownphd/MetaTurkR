@@ -57,8 +57,9 @@ MTCountAssignments <- function(results = NULL,
                                           feedback = "Thank you.",
                                           sandbox = sandbox)
     results[which(results$AssignmentStatus == "Submitted"),] <- "ApprovedLocal"
-    return(results)
   }
+
+  return(results)
 
 }
 
@@ -66,10 +67,10 @@ MTCountAssignments <- function(results = NULL,
 
 
 #----------------------------
-#' Function to increment a counter of assignments
+#' Function to score assignments and update a counter and qualification score
 #'
 #' This function fetches the count of assignments a worker has completed from MTurk, adds a counter for newly
-#' completed assignments, and posts the new count.
+#' completed assignments, scores assignments, and posts the new counts and scores to the appropriate qualifications.
 #'
 #' @param results A results object returned from MTurk.
 #' @param answers A \code{data.frame} or similar object with answers to questions in the \code{results} object.
@@ -78,12 +79,15 @@ MTCountAssignments <- function(results = NULL,
 #' @param scoreQual The qualification ID string that identifies the score qualification for this HIT.
 #' @param howToScore String with a value of \code{"runningTotal"} or \code{"relativeTotal"} (default).
 #' If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be defined.
-#' @param pointsPerQ A number or vector of numbers of length of \code{answers}. Default is 1.
+#' @param pointsPerQ A number or vector of numbers of length of \code{answers}. Default is 1. Value is passed to the
+#' \code{MTScoreAnswers} function
 #' @param approve Logical. Whether to approve assignments after counting. This will return the \code{results} object,
 #' but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
 #' working with the results. Default is \code{FALSE}.
 #' @param sandbox Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.
 #'
+#' @return Returns the scored subset ofthe inputted \code{results} object appended with scores.
+#' If \code{approve = TRUE}, it will change the "AssignmentStatus" to "ApprovedLocal".
 #'
 MTScoreAssignments <- function(results = NULL,
                                answers = NULL,
@@ -97,60 +101,74 @@ MTScoreAssignments <- function(results = NULL,
                                approve = FALSE,
                                sandbox = TRUE
 )
-#FUTURE FUNCTIONALITY:
-#Score locally only
 {
   if(is.null(results)) stop("Must declare 'results' to score")
   if(is.null(answers)) stop("Must declare 'answers' to score.")
   if(is.null(scoreQual)) stop("No qualification defined.")
+  if(howToScore != "relativeTotal") stop("No other scoring methods presently available.")
   if(howToScore == "relativeTotal" & is.null(counterQual)) stop("'counterQual' needs to be defined to use a relative total.")
-  if(is.null(questionNames)) stop("Must define 'questionNames'.")
+  #if(is.null(questionNames)) stop("Must define 'questionNames'.")
 
   #Get only submitted results
   resultsSub <- results[which(results$AssignmentStatus == "Submitted"),]
   if(nrow(resultsSub) == 0) stop("No new assignments to score.")
 
+  #Get list of workers who just submitted results
   uniqueWorkers <- unique(resultsSub$WorkerId)
 
+  #Get their scores on MTurk. Set qual to 0 if it doesn't exist for a worker.
   workerScore <- MTGetOrInitiateQualification(workerIds = uniqueWorkers,
                                               qualId = scoreQual,
                                               sandbox = sandbox)
 
   if(howToScore == "relativeTotal"){
+    #Get worker counts from MTurk. Set qual to 0 if it doesn't exist for a worker.
     workerCount <- MTGetOrInitiateQualification(workerIds = uniqueWorkers,
                                                 qualId = counterQual,
                                                 sandbox = sandbox)
 
-    tmp <- MTScoreAnswers(results = resultsSub,
-                          answers = answers,
-                          qPoints = pointsPerQ,
-                          questionNames = questionNames,
-                          scoreNAsAs = scoreNAsAs,
-                          NAValue = NULL
+    #Score results
+    resultsSub <- MTScoreAnswers(results = resultsSub,
+                                 answers = answers,
+                                 qPoints = pointsPerQ,
+                                 questionNames = questionNames,
+                                 scoreNAsAs = scoreNAsAs,
+                                 NAValue = NULL
     )
 
-    toAdd <- sapply((unique(tmp$WorkerId)),
-                    function(w) sum(tmp$score[which(tmp$WorkerId == w)]))
+    #Normalize values
+    resultsSub$score <- resultsSub$score*sum(pointsPerQ)
 
+    #Calculate how many points to add to existing score
+    toAdd <- sapply((unique(resultsSub$WorkerId)),
+                    function(w) sum(resultsSub$score[which(resultsSub$WorkerId == w)]))
+
+    #Make single object with values
     qualVals <- merge(workerCount,
                       workerScore,
                       by="WorkerId",
                       all = TRUE,
                       suffixes = c("count","score"))
 
+    #Calculate old total
     qualVals$total <- qualVals$Value.count * qualVals$Value.score * pointsPerHIT
+
+    #Initialize new columns for new scores and counts
     qualVals$newScore <- qualVals$total
     qualVals$newCount <- qualVals$Value.count
 
-    addCount <- table(tmp$WorkerId)
+    #Calculate how many new assignments completed
+    addCount <- table(resultsSub$WorkerId)
 
+    #For each worker, add new points and counts
     for(w in names(toAdd)){
-      qualVals$newScore <- qualVals$total[which(qualVals$WorkerId == w)] +
-        toAdd[w]
-
       qualVals$newCount <- qualVals$Value.count[which(qualVals$WorkerId == w)] +
         addCount[w]
+
+      qualVals$newScore <- (qualVals$total[which(qualVals$WorkerId == w)] +
+        toAdd[w]) / qualVals$newCount[which(qualVals$WorkerId == w)]
     }
+
     #update qualCount
     MTurkR::UpdateQualificationScore(qual = counterQual,
                                      workers = qualVals$WorkerId,
@@ -166,19 +184,19 @@ MTScoreAssignments <- function(results = NULL,
     message(paste(nrow(qualVals),
                   "qualification counts and scores updated for qualification",
                   counterQual))
-  } else {
-    stop("This functionality is not included yet.")
   }
-
-  if(approve == TRUE) {
+  #Approve assignments and mark assignments as approved locally
+  if(approve) {
     approved <- MTurkR::ApproveAssignment(resultsSub$AssignmentId,
                                           feedback = "Thank you.",
                                           sandbox = sandbox)
 
-    results[which(results$AssignmentStatus == "Submitted"),] <- "ApprovedLocal"
-    return(results)
+    resultsSub$AssignmentStatus <- "ApprovedLocal"
   }
 
+  if(!approve) {
+    return(resultsSub)
+  }
 }
 
 
@@ -236,6 +254,8 @@ MTGetOrInitiateQualification <- function(workerIds = NULL,
 #'\item "value" - NAs are overwritten with the value of \code{NAValue}
 #'}
 #'@param NAValue The value to replace NAs with.
+#'
+#'@return Returns the full inputted \code{results} object appended with scores.
 #'
 #'@examples
 #'

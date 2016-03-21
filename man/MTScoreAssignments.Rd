@@ -2,7 +2,7 @@
 % Please edit documentation in R/qualFunctions.R
 \name{MTScoreAssignments}
 \alias{MTScoreAssignments}
-\title{Function to increment a counter of assignments}
+\title{Function to score assignments and update a counter and qualification score}
 \usage{
 MTScoreAssignments(results = NULL, answers = NULL, scoreQual = NULL,
   howToScore = "relativeTotal", pointsPerHIT = 100, counterQual = NULL,
@@ -21,7 +21,8 @@ to be scored, it must have an annotation that matches the annotation in \code{an
 \item{howToScore}{String with a value of \code{"runningTotal"} or \code{"relativeTotal"} (default).
 If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be defined.}
 
-\item{pointsPerQ}{A number or vector of numbers of length of \code{answers}. Default is 1.}
+\item{pointsPerQ}{A number or vector of numbers of length of \code{answers}. Default is 1. Value is passed to the
+\code{MTScoreAnswers} function}
 
 \item{approve}{Logical. Whether to approve assignments after counting. This will return the \code{results} object,
 but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
@@ -29,8 +30,12 @@ working with the results. Default is \code{FALSE}.}
 
 \item{sandbox}{Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.}
 }
+\value{
+Returns the scored subset ofthe inputted \code{results} object appended with scores.
+If \code{approve = TRUE}, it will change the "AssignmentStatus" to "ApprovedLocal".
+}
 \description{
 This function fetches the count of assignments a worker has completed from MTurk, adds a counter for newly
-completed assignments, and posts the new count.
+completed assignments, scores assignments, and posts the new counts and scores to the appropriate qualifications.
 }
 
