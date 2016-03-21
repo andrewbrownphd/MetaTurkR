@@ -84,6 +84,8 @@ MTCountAssignments <- function(results = NULL,
 #' @param approve Logical. Whether to approve assignments after counting. This will return the \code{results} object,
 #' but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
 #' working with the results. Default is \code{FALSE}.
+#' @param outType Either set to \code{"sub"} or \code{"full"}. If \code{"sub"},
+#' only the newly evaluated subset will be returned.
 #' @param sandbox Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.
 #'
 #' @return Returns the scored subset ofthe inputted \code{results} object appended with scores.
@@ -99,9 +101,13 @@ MTScoreAssignments <- function(results = NULL,
                                questionNames = NULL,
                                scoreNAsAs = "wrong",
                                approve = FALSE,
+                               outType = "sub",
                                sandbox = TRUE
 )
 {
+  if(outType == "full") warning("Check output! Not vetted!")
+  if(!(outType %in% c("sub","full")))
+    stop("No legal outType specified. Must be 'sub' or 'full'.")
   if(is.null(results)) stop("Must declare 'results' to score")
   if(is.null(answers)) stop("Must declare 'answers' to score.")
   if(is.null(scoreQual)) stop("No qualification defined.")
@@ -192,10 +198,20 @@ MTScoreAssignments <- function(results = NULL,
                                           sandbox = sandbox)
 
     resultsSub$AssignmentStatus <- "ApprovedLocal"
+    if(outType == "sub") return(resultsSub)
+    if(outType == "full") return(merge(results,
+                                      resultsSub[,c("AssignmentId","score")],
+                                      by = "AssignmentId",
+                                      all = TRUE))
   }
 
   if(!approve) {
-    return(resultsSub)
+    resultsSub$AssignmentStatus <- "ScoredNotApproved"
+    if(outType == "sub") return(resultsSub)
+    if(outType == "full") return(merge(results,
+                                      resultsSub[,c("AssignmentId","score")],
+                                      by = "AssignmentId",
+                                      all = TRUE))
   }
 }
 

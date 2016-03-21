@@ -7,7 +7,7 @@
 MTScoreAssignments(results = NULL, answers = NULL, scoreQual = NULL,
   howToScore = "relativeTotal", pointsPerHIT = 100, counterQual = NULL,
   pointsPerQ = 1, questionNames = NULL, scoreNAsAs = "wrong",
-  approve = FALSE, sandbox = TRUE)
+  approve = FALSE, outType = "sub", sandbox = TRUE)
 }
 \arguments{
 \item{results}{A results object returned from MTurk.}
@@ -27,6 +27,9 @@ If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be
 \item{approve}{Logical. Whether to approve assignments after counting. This will return the \code{results} object,
 but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
 working with the results. Default is \code{FALSE}.}
+
+\item{outType}{Either set to \code{"sub"} or \code{"full"}. If \code{"sub"},
+only the newly evaluated subset will be returned.}
 
 \item{sandbox}{Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.}
 }
