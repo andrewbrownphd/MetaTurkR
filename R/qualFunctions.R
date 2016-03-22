@@ -76,11 +76,29 @@ MTCountAssignments <- function(results = NULL,
 #' @param answers A \code{data.frame} or similar object with answers to questions in the \code{results} object.
 #' \code{colnames} of \code{answers} must match the \code{colnames} of responses in \code{results}. For \code{results}
 #' to be scored, it must have an annotation that matches the annotation in \code{answers}.
-#' @param scoreQual The qualification ID string that identifies the score qualification for this HIT.
 #' @param howToScore String with a value of \code{"runningTotal"} or \code{"relativeTotal"} (default).
 #' If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be defined.
+#' @param scoreQual The qualification ID string that identifies the score qualification for this HIT.
+#' @param counterQual The qualification ID string that identifies the counter qualification for this#'\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
+#' 'answers'. The rows in this data frame will be used to map the columns of results
+#' to the columns in answers.
+#' @param updateQuals Logical for whether to update qualification values after scoring assignments.
+#' @param pointsPerHIT How many points each assignment is worth. Default is 100.
 #' @param pointsPerQ A number or vector of numbers of length of \code{answers}. Default is 1. Value is passed to the
 #' \code{MTScoreAnswers} function
+#' @param questionNames Columns names of questions to be compared between results
+#' and answers. If the columns names differ between the results and answers,
+#' \code{questionNames} can take a \code{data.frame} with colnames of 'results' and
+#' 'answers'. The rows in this data frame will be used to map the columns of results
+#' to the columns in answers. Needed for call to \code{MTScoreAnswers}.
+#' @param scoreNAsAs How to score NAs; possible values:
+#' \itemize{
+#' \item "wrong" - NAs are interpreted as wrong answers
+#' \item "right" - NAs are interpreted as right answers
+#' \item "value" - NAs are overwritten with the value of \code{NAValue}
+#' }
+#' Needed for call to \code{MTScoreAnswers}.
+#' @param NAValue The value to replace NAs with. Needed for call to \code{MTScoreAnswers}.
 #' @param approve Logical. Whether to approve assignments after counting. This will return the \code{results} object,
 #' but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
 #' working with the results. Default is \code{FALSE}.
@@ -93,13 +111,15 @@ MTCountAssignments <- function(results = NULL,
 #'
 MTScoreAssignments <- function(results = NULL,
                                answers = NULL,
-                               scoreQual = NULL,
                                howToScore = "relativeTotal",
-                               pointsPerHIT = 100,
+                               scoreQual = NULL,
                                counterQual = NULL,
+                               updateQuals = TRUE,
+                               pointsPerHIT = 100,
                                pointsPerQ = 1,
                                questionNames = NULL,
                                scoreNAsAs = "wrong",
+                               NAValue = NULL,
                                approve = FALSE,
                                outType = "sub",
                                sandbox = TRUE
@@ -139,57 +159,67 @@ MTScoreAssignments <- function(results = NULL,
                                  qPoints = pointsPerQ,
                                  questionNames = questionNames,
                                  scoreNAsAs = scoreNAsAs,
-                                 NAValue = NULL
+                                 NAValue = NAValue
     )
 
     #Normalize values
-    resultsSub$score <- resultsSub$score*sum(pointsPerQ)
+    resultsSub$score <- resultsSub$score/sum(pointsPerQ)*pointsPerHIT
 
     #Calculate how many points to add to existing score
     toAdd <- sapply((unique(resultsSub$WorkerId)),
                     function(w) sum(resultsSub$score[which(resultsSub$WorkerId == w)]))
+
+    names(toAdd) <- unique(resultsSub$WorkerId)
 
     #Make single object with values
     qualVals <- merge(workerCount,
                       workerScore,
                       by="WorkerId",
                       all = TRUE,
-                      suffixes = c("count","score"))
+                      suffixes = c("Count","Score"))
+
+    qualVals$ValueCount <- as.numeric(qualVals$ValueCount)
+    qualVals$ValueScore <- as.numeric(qualVals$ValueScore)
 
     #Calculate old total
-    qualVals$total <- qualVals$Value.count * qualVals$Value.score * pointsPerHIT
+    qualVals$total <- qualVals$ValueCount * qualVals$ValueScore * pointsPerHIT
 
     #Initialize new columns for new scores and counts
     qualVals$newScore <- qualVals$total
-    qualVals$newCount <- qualVals$Value.count
+    qualVals$newCount <- qualVals$ValueCount
 
     #Calculate how many new assignments completed
     addCount <- table(resultsSub$WorkerId)
 
     #For each worker, add new points and counts
     for(w in names(toAdd)){
-      qualVals$newCount <- qualVals$Value.count[which(qualVals$WorkerId == w)] +
-        addCount[w]
+      r <- which(qualVals$WorkerId == w)
+      qualVals$newCount <- qualVals$ValueCount[r] + addCount[w]
 
-      qualVals$newScore <- (qualVals$total[which(qualVals$WorkerId == w)] +
-        toAdd[w]) / qualVals$newCount[which(qualVals$WorkerId == w)]
+      qualVals$newScore[r] <- (qualVals$total[r] + toAdd[w]) / qualVals$newCount[r]
     }
 
-    #update qualCount
-    MTurkR::UpdateQualificationScore(qual = counterQual,
-                                     workers = qualVals$WorkerId,
-                                     value = as.character(qualVals$newCount),
-                                     sandbox = sandbox)
+    if(updateQuals){
+      #update qualCount
+      MTurkR::UpdateQualificationScore(qual = counterQual,
+                                       workers = qualVals$WorkerId,
+                                       value = as.character(qualVals$newCount),
+                                       sandbox = sandbox)
 
-    #update qualScore
-    MTurkR::UpdateQualificationScore(qual = scoreQual,
-                                     workers = qualVals$WorkerId,
-                                     value = as.character(qualVals$newScore),
-                                     sandbox = sandbox)
+      #update qualScore
+      MTurkR::UpdateQualificationScore(qual = scoreQual,
+                                       workers = qualVals$WorkerId,
+                                       value = as.character(qualVals$newScore),
+                                       sandbox = sandbox)
 
-    message(paste(nrow(qualVals),
-                  "qualification counts and scores updated for qualification",
-                  counterQual))
+      message(paste(nrow(qualVals),
+                    "qualification counts and scores updated for qualification",
+                    counterQual))
+    } else {
+      message(paste(nrow(qualVals),
+                    "qualification counts and scores would be updated for qualification",
+                    counterQual))
+    }
   }
   #Approve assignments and mark assignments as approved locally
   if(approve) {
@@ -200,18 +230,18 @@ MTScoreAssignments <- function(results = NULL,
     resultsSub$AssignmentStatus <- "ApprovedLocal"
     if(outType == "sub") return(resultsSub)
     if(outType == "full") return(merge(results,
-                                      resultsSub[,c("AssignmentId","score")],
-                                      by = "AssignmentId",
-                                      all = TRUE))
+                                       resultsSub[,c("AssignmentId","score")],
+                                       by = "AssignmentId",
+                                       all = TRUE))
   }
 
   if(!approve) {
     resultsSub$AssignmentStatus <- "ScoredNotApproved"
     if(outType == "sub") return(resultsSub)
     if(outType == "full") return(merge(results,
-                                      resultsSub[,c("AssignmentId","score")],
-                                      by = "AssignmentId",
-                                      all = TRUE))
+                                       resultsSub[,c("AssignmentId","score")],
+                                       by = "AssignmentId",
+                                       all = TRUE))
   }
 }
 
@@ -221,6 +251,10 @@ MTScoreAssignments <- function(results = NULL,
 
 #---------------------
 #' Helper function to get qualification values or to assign 0 if the worker does not yet have the ID
+#'
+#'@param workerIds A vector of worker IDs
+#'@param qualId The qualification ID to be returned or initiated for a given worker
+#'@param sandbox Whether to run on the live or sandbox site.
 #'
 MTGetOrInitiateQualification <- function(workerIds = NULL,
                                          qualId = NULL,
@@ -263,6 +297,11 @@ MTGetOrInitiateQualification <- function(workerIds = NULL,
 #'@param qPoints The points assigned to each question. Either a single value or a
 #'vector of length \code{questionNames}, where each element matches the points
 #'assigned to each element of \code{questionNames}.
+#'@param questionNames Columns names of questions to be compared between results
+#'and answers. If the columns names differ between the results and answers,
+#'\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
+#''answers'. The rows in this data frame will be used to map the columns of results
+#'to the columns in answers.
 #'@param scoreNAsAs How to score NAs; possible values:
 #'\itemize{
 #'\item "wrong" - NAs are interpreted as wrong answers

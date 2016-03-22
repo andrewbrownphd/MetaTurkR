@@ -7,6 +7,13 @@
 MTGetOrInitiateQualification(workerIds = NULL, qualId = NULL,
   sandbox = sandbox)
 }
+\arguments{
+\item{workerIds}{A vector of worker IDs}
+
+\item{qualId}{The qualification ID to be returned or initiated for a given worker}
+
+\item{sandbox}{Whether to run on the live or sandbox site.}
+}
 \description{
 Helper function to get qualification values or to assign 0 if the worker does not yet have the ID
 }

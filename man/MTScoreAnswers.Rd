@@ -16,6 +16,12 @@ MTScoreAnswers(results = NULL, answers = NULL, qPoints = 1,
 vector of length \code{questionNames}, where each element matches the points
 assigned to each element of \code{questionNames}.}
 
+\item{questionNames}{Columns names of questions to be compared between results
+and answers. If the columns names differ between the results and answers,
+\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
+'answers'. The rows in this data frame will be used to map the columns of results
+to the columns in answers.}
+
 \item{scoreNAsAs}{How to score NAs; possible values:
 \itemize{
 \item "wrong" - NAs are interpreted as wrong answers

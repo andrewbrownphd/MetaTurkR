@@ -4,9 +4,10 @@
 \alias{MTScoreAssignments}
 \title{Function to score assignments and update a counter and qualification score}
 \usage{
-MTScoreAssignments(results = NULL, answers = NULL, scoreQual = NULL,
-  howToScore = "relativeTotal", pointsPerHIT = 100, counterQual = NULL,
-  pointsPerQ = 1, questionNames = NULL, scoreNAsAs = "wrong",
+MTScoreAssignments(results = NULL, answers = NULL,
+  howToScore = "relativeTotal", scoreQual = NULL, counterQual = NULL,
+  updateQuals = TRUE, pointsPerHIT = 100, pointsPerQ = 1,
+  questionNames = NULL, scoreNAsAs = "wrong", NAValue = NULL,
   approve = FALSE, outType = "sub", sandbox = TRUE)
 }
 \arguments{
@@ -16,13 +17,37 @@ MTScoreAssignments(results = NULL, answers = NULL, scoreQual = NULL,
 \code{colnames} of \code{answers} must match the \code{colnames} of responses in \code{results}. For \code{results}
 to be scored, it must have an annotation that matches the annotation in \code{answers}.}
 
-\item{scoreQual}{The qualification ID string that identifies the score qualification for this HIT.}
-
 \item{howToScore}{String with a value of \code{"runningTotal"} or \code{"relativeTotal"} (default).
 If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be defined.}
 
+\item{scoreQual}{The qualification ID string that identifies the score qualification for this HIT.}
+
+\item{counterQual}{The qualification ID string that identifies the counter qualification for this#'\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
+'answers'. The rows in this data frame will be used to map the columns of results
+to the columns in answers.}
+
+\item{updateQuals}{Logical for whether to update qualification values after scoring assignments.}
+
+\item{pointsPerHIT}{How many points each assignment is worth. Default is 100.}
+
 \item{pointsPerQ}{A number or vector of numbers of length of \code{answers}. Default is 1. Value is passed to the
 \code{MTScoreAnswers} function}
+
+\item{questionNames}{Columns names of questions to be compared between results
+and answers. If the columns names differ between the results and answers,
+\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
+'answers'. The rows in this data frame will be used to map the columns of results
+to the columns in answers. Needed for call to \code{MTScoreAnswers}.}
+
+\item{scoreNAsAs}{How to score NAs; possible values:
+\itemize{
+\item "wrong" - NAs are interpreted as wrong answers
+\item "right" - NAs are interpreted as right answers
+\item "value" - NAs are overwritten with the value of \code{NAValue}
+}
+Needed for call to \code{MTScoreAnswers}.}
+
+\item{NAValue}{The value to replace NAs with. Needed for call to \code{MTScoreAnswers}.}
 
 \item{approve}{Logical. Whether to approve assignments after counting. This will return the \code{results} object,
 but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
