@@ -62,6 +62,8 @@ AssembleHITHTML <- function(honeyPot=FALSE,
   if(nrow(content)>1) warning("Content contains more than one row; only the first is used")
   content <- content[1,]
 
+  innerHTML.html <- HTMLWithParms(innerHTML.html, "Q", "annotation")
+
   parms <- unlist(sapply(2:length(files),function(x) extractParms(get(files[x]))))
 
   if(!quiet) message(paste("Parameters found in files:",
