@@ -329,7 +329,11 @@ MTScoreAnswers <- function(results=NULL,
   if(is.null(results) | is.null(answers)) stop("Must specify results and answers.")
   if(nrow(answers) == 0) stop("Answers object is empty.")
   if(scoreNAsAs == "value" & is.null(NAValue)) stop("If replacing NAs with a value, NAValue must be specified.")
-  if(scoreNAsAs == "value") results[,(is.na(results))] <- NAValue
+  if(scoreNAsAs == "value")
+    results[,questionNames] <- sapply(questionNames,
+                                      function(n) replace(results[,n],
+                                                          which(is.na(results[,n])),
+                                                          "n/a"))
   if(length(qPoints) > 1 & is.null(questionNames))
     stop("'questionNames' must be specified if 'qPoints' is greater than length 1.")
 
@@ -375,7 +379,7 @@ MTScoreAnswers <- function(results=NULL,
                               answers[a, qName] == results[whichA, qName])]
 
       if(scoreNAsAs == "value")
-        tmp <- whichA[which(answers[a, qName] == results[whichA, q])]
+        tmp <- whichA[which(answers[a, qName] == results[whichA, qName])]
 
       if(length(tmp>0)) results$score[tmp] <- results$score[tmp] + qPoints[q]
     }
