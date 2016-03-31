@@ -16,7 +16,7 @@ AssembleHITHTML <- function(honeyPot=FALSE,
                             #emptyHoneyPots=NULL,#not yet functional
 )
 
-#Annotations are presently extracted from the content file
+#ations are presently extracted from the content file
 #Makes a single HIT
 #Can be used to iterate through a content set
 ##or to make a template to replace parms outside of this function
@@ -62,7 +62,8 @@ AssembleHITHTML <- function(honeyPot=FALSE,
   if(nrow(content)>1) warning("Content contains more than one row; only the first is used")
   content <- content[1,]
 
-  innerHTML.html <- HTMLWithParms(innerHTML.html, "Q", "annotation")
+  #annotation no longer used
+  #innerHTML.html <- HTMLWithParms(innerHTML.html, "Q", "annotation")
 
   parms <- unlist(sapply(2:length(files),function(x) extractParms(get(files[x]))))
 
@@ -85,7 +86,7 @@ AssembleHITHTML <- function(honeyPot=FALSE,
       j <- j+1
     }
     ansTmp <- paste0(
-      "<script>var ans",content[1,"annotation"]," = {",
+      "<script>var ans = {",
       paste(ansTmp,collapse=","),
       "};</script>"
     )
