@@ -3,7 +3,7 @@ AssembleHITHTML <- function(honeyPot=FALSE,
                             inputLoc="input",
                             content=NULL,
                             quiet=TRUE,
-                            write.to=NULL,
+                            write.to="console",
                             sandbox=TRUE,
                             innerHTML.html=NULL,
                             skipPattern.js=NULL,
@@ -122,8 +122,11 @@ AssembleHITHTML <- function(honeyPot=FALSE,
   if(length(extra) > 0) warning(paste("Unfilled parameters exist in output:",
                                       paste0("${",extra,"}",collapse="; ")))
 
-  if(!is.null(write.to)) write(out,file = write.to)
-
-  if(!quiet) return(out)
-
+  if(!is.null(write.to)){
+    if(write.to == "console"){
+      return(out)
+      } else {
+        write(out,file = write.to)
+      }
+  }
 }
