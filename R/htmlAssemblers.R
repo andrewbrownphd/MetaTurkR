@@ -52,10 +52,12 @@ MTAssembleHITHTML <- function(inputLoc="input",
     assign(f,MTImport(get(f),inputLoc))
   }
 
-  if(content == "import") tryCatch(content <- read.delim(paste0(inputLoc,"/","content.tab"),
-                                                         sep="\t",
-                                                         stringsAsFactors=F),
-                                   error = function(e) stop(paste0("Error importing content.tab. Check that the file exists, and that inputLoc is correctly defined.")))
+  if(class(content) == "character"){
+    if(content == "import") tryCatch(content <- read.delim(paste0(inputLoc,"/","content.tab"),
+                                                           sep="\t",
+                                                           stringsAsFactors=F),
+                                     error = function(e) stop(paste0("Error importing content.tab. Check that the file exists, and that inputLoc is correctly defined.")))
+  }
   if(any(class(content) == "file")) tryCatch(content <- read.delim(content,
                                                                    sep="\t",
                                                                    stringsAsFactors=F),
@@ -63,8 +65,11 @@ MTAssembleHITHTML <- function(inputLoc="input",
                                                                              content,
                                                                              ". Check that the file exists.")))
 
-  if(nrow(content)>1) warning("Content contains more than one row; only the first is used")
-  content <- content[1,]
+  if(class(content) != "character"){
+    if(nrow(content)>1) warning("Content contains more than one row; only the first is used")
+    content <- content[1,]
+    content[] <- lapply(content,as.character)
+  }
 
   parms <- unlist(sapply(2:length(files),function(x) extractParms(get(files[x]))))
 
@@ -152,7 +157,7 @@ MTAssembleHoneyHTML <- function(inputLoc="input",
                                 innerScript.js = "import",
                                 hitShell.html = "import",
                                 honeyScript = TRUE,
-                                button = NULL,
+                                button = "honey",
                                 skipPattern = NULL,
                                 write.to="console",
                                 quiet=TRUE,
@@ -219,7 +224,7 @@ MTAssembleHoneyHTML <- function(inputLoc="input",
                            innerHTML.html,
                            innerScript.js,
                            hitShell.html,
-                           button = "honey",
+                           button = button,
                            skipPattern,
                            write.to = "console",
                            quiet,
