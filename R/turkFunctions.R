@@ -80,7 +80,7 @@ MTGetHITTypeResults <- function(HITTypeId = NULL,
                         sandbox=sandbox)
 
   results <- MTurkR::GetAssignments(hit.type = HITTypeId,sandbox=sandbox)
-  if(!is.null(reward))  HourlyRate(results,reward)
+  if(!is.null(reward))  MTHourlyRate(results,reward)
   results <- merge(HITSet,results[,-which(colnames(results) == "HITTypeId")])
 
   return(results)
