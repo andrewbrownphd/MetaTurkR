@@ -196,7 +196,7 @@ MTScoreAssignments <- function(results = NULL,
     #For each worker, add new points and counts
     for(w in names(toAdd)){
       r <- which(qualVals$WorkerId == w)
-      qualVals$newCount <- qualVals$ValueCount[r] + addCount[w]
+      qualVals$newCount[r] <- qualVals$ValueCount[r] + addCount[w]
 
       qualVals$newScore[r] <- (qualVals$total[r] + toAdd[w]) / qualVals$newCount[r]
     }
