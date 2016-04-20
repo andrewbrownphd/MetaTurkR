@@ -83,7 +83,9 @@ MTCountAssignments <- function(results = NULL,
 #' 'answers'. The rows in this data frame will be used to map the columns of results
 #' to the columns in answers.
 #' @param updateQuals Logical for whether to update qualification values after scoring assignments.
-#' @param pointsPerHIT How many points each assignment is worth. Default is 100.
+#' @param pointsPerHIT How many points each assignment is worth. Default is 10,000
+#' because MTurk does not take decimal values. This is equivalent to percent with 2
+#' decimal places.
 #' @param pointsPerQ A number or vector of numbers of length of \code{answers}. Default is 1. Value is passed to the
 #' \code{MTScoreAnswers} function
 #' @param questionNames Columns names of questions to be compared between results
@@ -114,8 +116,8 @@ MTScoreAssignments <- function(results = NULL,
                                howToScore = "relativeTotal",
                                scoreQual = NULL,
                                counterQual = NULL,
-                               updateQuals = TRUE,
-                               pointsPerHIT = 100,
+                               updateQuals = FALSE,
+                               pointsPerHIT = 10000,
                                pointsPerQ = 1,
                                questionNames = NULL,
                                scoreNAsAs = "wrong",
@@ -162,18 +164,18 @@ MTScoreAssignments <- function(results = NULL,
                                  NAValue = NAValue
     )
 
-    #Normalize values
+    #Normalize values to total of pointsPerHIT
     resultsSub$score <- resultsSub$score/sum(pointsPerQ)*pointsPerHIT
 
-    #Calculate how many points to add to existing score
+    #Calculate how many points to add to existing cumulative score
     toAdd <- sapply((unique(resultsSub$WorkerId)),
                     function(w) sum(resultsSub$score[which(resultsSub$WorkerId == w)]))
 
     names(toAdd) <- unique(resultsSub$WorkerId)
 
     #Make single object with values
-    qualVals <- merge(workerCount,
-                      workerScore,
+    qualVals <- merge(workerCount, #ValueCount
+                      workerScore, #ValueScore
                       by="WorkerId",
                       all = TRUE,
                       suffixes = c("Count","Score"))
@@ -181,8 +183,8 @@ MTScoreAssignments <- function(results = NULL,
     qualVals$ValueCount <- as.numeric(qualVals$ValueCount)
     qualVals$ValueScore <- as.numeric(qualVals$ValueScore)
 
-    #Calculate old total
-    qualVals$total <- qualVals$ValueCount * qualVals$ValueScore * pointsPerHIT
+    #Calculate old cumulative total
+    qualVals$total <- qualVals$ValueCount * qualVals$ValueScore
 
     #Initialize new columns for new scores and counts
     qualVals$newScore <- qualVals$total
@@ -206,19 +208,24 @@ MTScoreAssignments <- function(results = NULL,
                                        value = as.character(qualVals$newCount),
                                        sandbox = sandbox)
 
-      #update qualScore
+      #update qualScore, rounded to integer
       MTurkR::UpdateQualificationScore(qual = scoreQual,
                                        workers = qualVals$WorkerId,
-                                       value = as.character(qualVals$newScore),
+                                       value = round(as.character(qualVals$newScore)),
                                        sandbox = sandbox)
 
       message(paste(nrow(qualVals),
-                    "qualification counts and scores updated for qualification",
-                    counterQual))
+                    "qualification counts and scores updated for qualifications",
+                    counterQual,
+                    "and",
+                    scoreQual))
     } else {
       message(paste(nrow(qualVals),
-                    "qualification counts and scores would be updated for qualification",
-                    counterQual))
+                    "qualification counts and scores WOULD be updated for qualification",
+                    counterQual,
+                    "and",
+                    scoreQual))
+      message(qualVals)
     }
   }
   #Approve assignments and mark assignments as approved locally
@@ -228,21 +235,17 @@ MTScoreAssignments <- function(results = NULL,
                                           sandbox = sandbox)
 
     resultsSub$AssignmentStatus <- "ApprovedLocal"
-    if(outType == "sub") return(resultsSub)
-    if(outType == "full") return(merge(results,
-                                       resultsSub[,c("AssignmentId","score")],
-                                       by = "AssignmentId",
-                                       all = TRUE))
   }
 
-  if(!approve) {
-    resultsSub$AssignmentStatus <- "ScoredNotApproved"
-    if(outType == "sub") return(resultsSub)
-    if(outType == "full") return(merge(results,
-                                       resultsSub[,c("AssignmentId","score")],
-                                       by = "AssignmentId",
-                                       all = TRUE))
-  }
+  if(!approve & updateQuals) resultsSub$AssignmentStatus <- "QualsUpdatedButNotApproved"
+
+  if(approve & !updateQuals) resultsSub$Assignmentstatus <- "QualsNotUpdatedButApproved"
+
+  if(outType == "sub") return(resultsSub)
+  if(outType == "full") return(merge(results,
+                                     resultsSub[,c("AssignmentId","score")],
+                                     by = "AssignmentId",
+                                     all = TRUE))
 }
 
 
