@@ -211,7 +211,7 @@ MTScoreAssignments <- function(results = NULL,
       #update qualScore, rounded to integer
       MTurkR::UpdateQualificationScore(qual = scoreQual,
                                        workers = qualVals$WorkerId,
-                                       value = round(as.character(qualVals$newScore)),
+                                       value = as.character(round(qualVals$newScore)),
                                        sandbox = sandbox)
 
       message(paste(nrow(qualVals),
@@ -225,7 +225,7 @@ MTScoreAssignments <- function(results = NULL,
                     counterQual,
                     "and",
                     scoreQual))
-      message(qualVals)
+      print(qualVals)
     }
   }
   #Approve assignments and mark assignments as approved locally
