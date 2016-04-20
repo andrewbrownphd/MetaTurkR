@@ -33,7 +33,8 @@ MTSetCred <- function(filename = paste0("src/credentials.txt"))
   cred <- readLines(con=filename)
   credA <- substr(cred[grep("^access_key",cred)],12,100)
   credS <- substr(cred[grep("^secret_key",cred)],12,100)
-  MTurkR::credentials(c(credA,credS))
+  Sys.setenv(AWS_ACCESS_KEY_ID = credA, AWS_SECRET_ACCESS_KEY = credS)
+  #MTurkR::credentials(c(credA,credS))
   rm("cred","credA","credS")
 }
 
