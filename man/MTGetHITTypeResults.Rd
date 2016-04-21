@@ -4,13 +4,17 @@
 \alias{MTGetHITTypeResults}
 \title{Get results for a given HITTypeId}
 \usage{
-MTGetHITTypeResults(HITTypeId = NULL, reward = NULL, sandbox = TRUE)
+MTGetHITTypeResults(HITTypeId = NULL, reward = NULL, resultSet = "full",
+  sandbox = TRUE)
 }
 \arguments{
 \item{HITTypeId}{REQUIRED. The HITTypeId for the HITs to be returned.}
 
 \item{reward}{The amount in dollars that microworkers are rewarded. This is used as a convenient means of returning
-the average hourly rate.}
+the average hourly rate. Not used when only looking at an incomplete set.}
+
+\item{resultSet}{Defines the set of assignments to return: \code{"full"} gets all;
+\code{"incomplete"} only gets non-reviewed assignments.}
 
 \item{sandbox}{Default is \code{TRUE}. Tells the functions whether to operate on the
 live or sandbox Mechanical Turk sites.}
