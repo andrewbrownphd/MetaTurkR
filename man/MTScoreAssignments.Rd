@@ -6,7 +6,7 @@
 \usage{
 MTScoreAssignments(results = NULL, answers = NULL,
   howToScore = "relativeTotal", scoreQual = NULL, counterQual = NULL,
-  updateQuals = TRUE, pointsPerHIT = 100, pointsPerQ = 1,
+  updateQuals = FALSE, pointsPerHIT = 10000, pointsPerQ = 1,
   questionNames = NULL, scoreNAsAs = "wrong", NAValue = NULL,
   approve = FALSE, outType = "sub", sandbox = TRUE)
 }
@@ -28,7 +28,9 @@ to the columns in answers.}
 
 \item{updateQuals}{Logical for whether to update qualification values after scoring assignments.}
 
-\item{pointsPerHIT}{How many points each assignment is worth. Default is 100.}
+\item{pointsPerHIT}{How many points each assignment is worth. Default is 10,000
+because MTurk does not take decimal values. This is equivalent to percent with 2
+decimal places.}
 
 \item{pointsPerQ}{A number or vector of numbers of length of \code{answers}. Default is 1. Value is passed to the
 \code{MTScoreAnswers} function}
