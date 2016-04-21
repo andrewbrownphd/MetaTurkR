@@ -558,9 +558,9 @@ MTBonusFromQual <- function(HITTypeId=NULL,
   if(length(HITTypeId) > 1) stop("Only one HITTypeId can be specified.")
 
   #get existing bonuses (expand to allow repeated bonuses?)
-  existingBonuses <- tryCatch(MTurkR::GetBonuses(hit.type = HITTypeId,
-                                                 return.all = TRUE,
-                                                 sandbox = sandbox),
+  existingBonuses <- tryCatch(suppressMessages(MTurkR::GetBonuses(hit.type = HITTypeId,
+                                                                  return.all = TRUE,
+                                                                  sandbox = sandbox)),
                               error = function(e) "No existing bonuses")
   if(existingBonuses == "No existing bonuses"){
     print(existingBonuses)
