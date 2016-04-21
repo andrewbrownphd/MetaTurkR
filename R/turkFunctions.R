@@ -519,6 +519,8 @@ MTBonusFromQual <- function(HITTypeId=NULL,
                             verbose = FALSE,
                             confirm = TRUE)
 {
+  if(class(quals) != "character") stop("quals must be a string or vector of strings.")
+  if(class(emailText) != "character") stop("Message must be a string.")
   if(is.null(bonusThresholds) | is.null(bonusAmount)) stop("Must set both bonus parameters.")
   if(is.null(quals)) stop("Must specify at least one qual as the criterion to grant a bonus.")
   if(length(bonusThresholds) != length(quals)) stop("bonusThresholds must be specified for each qual.")
@@ -554,10 +556,6 @@ MTBonusFromQual <- function(HITTypeId=NULL,
   }
 
   if(length(HITTypeId) > 1) stop("Only one HITTypeId can be specified.")
-
-  #process the quals strings
-  if(class(quals) != "character") stop("counterQual must be a string.")
-  if(class(message) != "character") stop("Message must be a string.")
 
   #get existing bonuses (expand to allow repeated bonuses?)
   existingBonuses <- tryCatch(MTurkR::GetBonuses(hit.type = HITTypeId,
