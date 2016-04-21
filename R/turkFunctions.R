@@ -530,7 +530,6 @@ MTBonusFromQual <- function(HITTypeId=NULL,
   if(!is.null(HITSet) & (!is.null(HITTypeId) | !is.null(workerIds) | !is.null(assignmentIds)))
     stop("Must define HITSet OR HITTypeId, workerIds, and assignmentsIds.")
 
-
   if(!is.null(HITSet)){
     if(class(HITSet) != "data.frame")
       stop("HITSet must be a data frame with 'HITTypeId', 'WorkerId', and 'AssignmentId' columns.")
