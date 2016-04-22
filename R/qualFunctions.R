@@ -107,6 +107,7 @@ MTCountAssignments <- function(results = NULL,
 #' @param outType Either set to \code{"sub"} or \code{"full"}. If \code{"sub"},
 #' only the newly evaluated subset will be returned.
 #' @param sandbox Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.
+#' @param verbose Logical. Whether to print additional messages or not.
 #'
 #' @return Returns the scored subset ofthe inputted \code{results} object appended with scores.
 #' If \code{approve = TRUE}, it will change the "AssignmentStatus" to "ApprovedLocal".
@@ -124,7 +125,8 @@ MTScoreAssignments <- function(results = NULL,
                                NAValue = NULL,
                                approve = FALSE,
                                outType = "sub",
-                               sandbox = TRUE
+                               sandbox = TRUE,
+                               verbose = FALSE
 )
 {
   if(outType == "full") warning("Check output! Not vetted!")
@@ -225,7 +227,10 @@ MTScoreAssignments <- function(results = NULL,
                     counterQual,
                     "and",
                     scoreQual))
-      print(qualVals)
+      if(verbose){
+        print("Scores\n")
+        print(qualVals)
+      }
     }
   }
   #Approve assignments and mark assignments as approved locally
@@ -263,7 +268,7 @@ MTGetOrInitiateQualification <- function(workerIds = NULL,
                                          qualId = NULL,
                                          sandbox = sandbox)
 {
-  #Get Qualificaiton values
+  #Get Qualification values
   #Warnings and messages suppressed because sometimes workers do not have the qual
   qualValues <- suppressWarnings(suppressMessages(
     MTurkR::GetQualificationScore(qual = qualId,

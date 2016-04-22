@@ -8,7 +8,7 @@ MTScoreAssignments(results = NULL, answers = NULL,
   howToScore = "relativeTotal", scoreQual = NULL, counterQual = NULL,
   updateQuals = FALSE, pointsPerHIT = 10000, pointsPerQ = 1,
   questionNames = NULL, scoreNAsAs = "wrong", NAValue = NULL,
-  approve = FALSE, outType = "sub", sandbox = TRUE)
+  approve = FALSE, outType = "sub", sandbox = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{results}{A results object returned from MTurk.}
@@ -59,6 +59,8 @@ working with the results. Default is \code{FALSE}.}
 only the newly evaluated subset will be returned.}
 
 \item{sandbox}{Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.}
+
+\item{verbose}{Logical. Whether to print additional messages or not.}
 }
 \value{
 Returns the scored subset ofthe inputted \code{results} object appended with scores.
