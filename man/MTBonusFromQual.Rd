@@ -27,7 +27,7 @@ XOR \code{"HITSet"} must be specified.}
 
 \item{bonusThresholds}{A single bonus threshold or vector of bonus thresholds. Must be the same
 length as \code{quals}. The threshold means the worker must have a value greater than or equal
-to the threshold amount.}
+to the threshold amount. Must be \code{numeric}.}
 
 \item{bonusAmount}{The amount of money, in dollars, to be given to each worker.}
 

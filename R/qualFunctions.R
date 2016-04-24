@@ -417,7 +417,7 @@ MTScoreAnswers <- function(results=NULL,
 #' @param quals A single QualificationId or vector of QualificationIds.
 #' @param bonusThresholds A single bonus threshold or vector of bonus thresholds. Must be the same
 #' length as \code{quals}. The threshold means the worker must have a value greater than or equal
-#' to the threshold amount.
+#' to the threshold amount. Must be \code{numeric}.
 #' @param bonusAmount The amount of money, in dollars, to be given to each worker.
 #' @param emailText The text of an email to send to the workers. Default is \code{NULL}, which
 #' results in text of "Thank you for completing these HITs!"
@@ -453,13 +453,14 @@ MTBonusFromQual <- function(HITTypeId=NULL,
   if(is.null(bonusThresholds) | is.null(bonusAmount)) stop("Must set both bonus parameters.")
   if(is.null(quals)) stop("Must specify at least one qual as the criterion to grant a bonus.")
   if(length(bonusThresholds) != length(quals)) stop("bonusThresholds must be specified for each qual.")
+  if(class(bonusThresholds) != "numeric") stop("bonusThresholds must be numeric.")
 
   if(is.null(HITSet) & (is.null(HITTypeId) | is.null(workerIds) | is.null(assignmentIds)))
     stop("Must define HITTypeId, workerIds, and assignmentsIds; or
          define a HITSet data.frame with 'HITTypeId', 'WorkerId', and 'AssignmentId' columns.")
 
   if(!is.null(HITSet) & (!is.null(HITTypeId) | !is.null(workerIds) | !is.null(assignmentIds)))
-    stop("Must define HITSet OR HITTypeId, workerIds, and assignmentsIds.")
+    stop("Must define HITSet OR HITTypeId, workerIds, and assignmentIds.")
 
   if(!is.null(HITSet)){
     if(class(HITSet) != "data.frame")
@@ -507,11 +508,11 @@ MTBonusFromQual <- function(HITTypeId=NULL,
     if(nrow(HITSet) > 0){
       #Get Counter values
       #Warnings and messages suppressed because sometimes workers do not have the qual
-      workerCounts <- suppressWarnings(suppressMessages(
+      workerQuals <- suppressWarnings(suppressMessages(
         MTurkR::GetQualificationScore(qual=quals[i],
                                       workers=HITSet$WorkerId,
                                       sandbox=sandbox)))
-      workerIds <- workerCounts$WorkerId[which(as.numeric(workerCounts$Value) >= bonusThresholds[i])]
+      workerIds <- workerQuals$WorkerId[which(as.numeric(workerQuals$Value) >= bonusThresholds[i])]
       HITSet <- HITSet[which(HITSet$WorkerId %in% workerIds),]
     } else {
       message("No bonuses to be given in this set of workerIds.")
