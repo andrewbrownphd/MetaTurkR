@@ -140,6 +140,7 @@ MTScoreAssignments <- function(results = NULL,
   #if(is.null(questionNames)) stop("Must define 'questionNames'.")
 
   #Get only submitted results
+  resultsSub$AssignmentStatus <- as.character(resultsSub$AssignmentStatus)
   resultsSub <- results[which(results$AssignmentStatus == "Submitted"),]
   if(nrow(resultsSub) == 0) stop("No new assignments to score.")
 
@@ -233,13 +234,49 @@ MTScoreAssignments <- function(results = NULL,
       }
     }
   }
+
+  approveFnxn <- function(resultsSub, sandbox, r){
+    approve <- tryCatch({
+      MTurkR::ApproveAssignment(resultsSub$AssignmentId[r],
+                                feedback = "Thank you.",
+                                sandbox = sandbox)
+      resultsSub$AssignmentStatus[r] <- "ApprovedLocal"
+    },
+    error = function(e) {
+      if(grepl("Timeout was reached",e)) {
+        print(paste(e,". Trying again for assignment",resultsSub$AssignmentId[r]))
+        resultsSub <- approveFnxn(resultsSub, sandbox ,r)
+        resultsSub$AssignmentStatus[r] <- "ApprovedLocal"
+      } else {
+        stop(e)
+      }
+    },
+    warning = function(w) {
+      if(grepl("Invalid Request for", w)){
+        warning(paste("Assignment", resultsSub$AssignmentId[r], "invalid request; possibly already approved?"))
+      } else {
+        warning(w)
+      }
+    },
+    message = function(m){
+      if(grepl("not valid for API request", m)){
+        warning(paste("Assignment", resultsSub$AssignmentId[r], "invalid request; possibly already approved?"))
+      } else {
+        print("printing message")
+        print(m)
+      }
+    },
+    finally = {
+      return(resultsSub)
+    }
+    )
+  }
   #Approve assignments and mark assignments as approved locally
   if(approve) {
-    approved <- MTurkR::ApproveAssignment(resultsSub$AssignmentId,
-                                          feedback = "Thank you.",
-                                          sandbox = sandbox)
-
-    resultsSub$AssignmentStatus <- "ApprovedLocal"
+    #Do one at a time to catch errors; probably slower, but not slower than dealing with errors mid stream
+    for(r in 1:nrow(resultsSub)){
+      resultsSub <- approveFnxn(resultsSub, sandbox, r)
+    }
   }
 
   if(!approve & updateQuals) resultsSub$AssignmentStatus <- "QualsUpdatedButNotApproved"
