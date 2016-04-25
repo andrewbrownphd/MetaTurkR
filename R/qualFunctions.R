@@ -238,7 +238,7 @@ MTScoreAssignments <- function(results = NULL,
   approveFnxn <- function(resultsSub, sandbox, r){
     approve <- tryCatch({
       MTurkR::ApproveAssignment(resultsSub$AssignmentId[r],
-                                feedback = "Thank you.",
+                                feedback = "Approval recognizes your completion of the task, not necessarily that the answers were correct. Thank you.",
                                 sandbox = sandbox)
       resultsSub$AssignmentStatus[r] <- "ApprovedLocal"
     },
@@ -262,8 +262,7 @@ MTScoreAssignments <- function(results = NULL,
       if(grepl("not valid for API request", m)){
         warning(paste("Assignment", resultsSub$AssignmentId[r], "invalid request; possibly already approved?"))
       } else {
-        print("printing message")
-        print(m)
+        m
       }
     },
     finally = {
@@ -281,7 +280,7 @@ MTScoreAssignments <- function(results = NULL,
 
   if(!approve & updateQuals) resultsSub$AssignmentStatus <- "QualsUpdatedButNotApproved"
 
-  if(approve & !updateQuals) resultsSub$Assignmentstatus <- "QualsNotUpdatedButApproved"
+  if(approve & !updateQuals) resultsSub$AssignmentStatus <- "QualsNotUpdatedButApproved"
 
   if(outType == "sub") return(resultsSub)
   if(outType == "full") return(merge(results,
