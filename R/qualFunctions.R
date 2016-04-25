@@ -515,7 +515,7 @@ MTBonusFromQual <- function(HITTypeId=NULL,
       if(verbose) print(workerQuals)
       workerIds <- workerQuals$WorkerId[which(as.numeric(workerQuals$Value) >= bonusThresholds[i])]
       HITSet <- merge(HITSet,workerQuals[,c("WorkerId","Value")], by="WorkerId")
-      colnames(HITSet)[which(colnames(HITSet == "Value"))] <- quals[i]
+      colnames(HITSet)[which(colnames(HITSet) == "Value")] <- quals[i]
       HITSet <- HITSet[which(HITSet$WorkerId %in% workerIds),]
     } else {
       message("No bonuses to be given in this set of workerIds.")
