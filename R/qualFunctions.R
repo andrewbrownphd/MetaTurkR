@@ -142,7 +142,11 @@ MTScoreAssignments <- function(results = NULL,
   #Get only submitted results
   resultsSub$AssignmentStatus <- as.character(resultsSub$AssignmentStatus)
   resultsSub <- results[which(results$AssignmentStatus == "Submitted"),]
-  if(nrow(resultsSub) == 0) stop("No new assignments to score.")
+  #Return NULL or original if nothing to score
+  if(nrow(resultsSub) == 0){
+    if(outType == "sub") return(invisible())
+    if(outType == "full") return(invisible(results))
+  }
 
   #Get list of workers who just submitted results
   uniqueWorkers <- unique(resultsSub$WorkerId)
