@@ -47,12 +47,16 @@ MTAssembleHITHTML <- function(inputLoc="input",
   for(f in files)
   {
     #See if the files should be defaults, different files, or taken as literal strings
-    if(get(f) != "import" & !any(class(get(f)) == "file")) next
-    if(get(f) == "import") assign(f,f)
-    assign(f,MTImport(get(f),inputLoc))
+    if(length(get(f)) == 1){
+      if(get(f) != "import" & !any(class(get(f)) == "file")) next
+      if(get(f) == "import") assign(f,f)
+      assign(f,MTImport(get(f),inputLoc))
+    } else {
+      stop("js and html inputs must be of class 'file', the word 'import', or a character string specifying the content.")
+    }
   }
 
-  if(class(content) == "character"){
+  if(length(content) == 1){
     if(content == "import") tryCatch(content <- read.delim(paste0(inputLoc,"/","content.tab"),
                                                            sep="\t",
                                                            stringsAsFactors=F),
@@ -177,15 +181,22 @@ MTAssembleHoneyHTML <- function(inputLoc="input",
 
   for(f in files)
   {
-    if(get(f) != "import" & !any(class(get(f)) == "file")) next
-    if(get(f) == "import") assign(f,f)
-    assign(f,MTImport(get(f),inputLoc))
+    #See if the files should be defaults, different files, or taken as literal strings
+    if(length(get(f)) == 1){
+      if(get(f) != "import" & !any(class(get(f)) == "file")) next
+      if(get(f) == "import") assign(f,f)
+      assign(f,MTImport(get(f),inputLoc))
+    } else {
+      stop("js and html inputs must be of class 'file', the word 'import', or a character string specifying the content.")
+    }
   }
 
-  if(content == "import") tryCatch(content <- read.delim(paste0(inputLoc,"/","content.tab"),
-                                                         sep="\t",
-                                                         stringsAsFactors=F),
-                                   error = function(e) stop(paste0("Error importing content.tab. Check that the file exists, and that inputLoc is correctly defined.")))
+  if(length(content) == 1){
+    if(content == "import") tryCatch(content <- read.delim(paste0(inputLoc,"/","content.tab"),
+                                                           sep="\t",
+                                                           stringsAsFactors=F),
+                                     error = function(e) stop(paste0("Error importing content.tab. Check that the file exists, and that inputLoc is correctly defined.")))
+  }
   if(any(class(content) == "file")) tryCatch(content <- read.delim(content,
                                                                    sep="\t",
                                                                    stringsAsFactors=F),
@@ -193,11 +204,10 @@ MTAssembleHoneyHTML <- function(inputLoc="input",
                                                                              content,
                                                                              ". Check that the file exists.")))
 
-  if(nrow(content)>1) warning("Content contains more than one row; only the first is used")
-  content <- content[1,]
+  if(nrow(content)>1) stop("'content' contains more than one row.")
 
   if(!("justification" %in% colnames(content)))
-    stop("Justification for correct answer must be specified as 'justification' in Content")
+    stop("Justification for correct answer must be specified as 'justification' in 'content'.")
 
   answers <- MTAnswerConstructor(content[,honeyVars], honeyVars)
   checkAnswers <- MTRead("checkAnswers.js")
