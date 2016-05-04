@@ -144,6 +144,7 @@ MTScoreAssignments <- function(results = NULL,
   resultsSub <- results[which(results$AssignmentStatus == "Submitted"),]
   #Return NULL or original if nothing to score
   if(nrow(resultsSub) == 0){
+    message("No new Assignments to score.")
     if(outType == "sub") return(invisible())
     if(outType == "full") return(invisible(results))
   }
