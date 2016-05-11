@@ -21,6 +21,7 @@ AssembleHITHTML <- function(honeyPot=FALSE,
 #Can be used to iterate through a content set
 ##or to make a template to replace parms outside of this function
 {
+  warning("AssembleHITHTML is antiquated and will be depricated in future releases.")
   if(quiet == TRUE & is.null(write.to)) warning("No output method selected: 'quiet' is TRUE and 'write.to' is NULL.")
   if(honeyPot != FALSE & is.null(honeyPotVars)) stop("Honey pot variables need to be defined if using honeyPots")
 

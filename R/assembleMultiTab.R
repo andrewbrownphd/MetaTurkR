@@ -13,6 +13,7 @@ AssembleMultiTab <- function(ansVars=NULL,
 )
 #Annotations are presently extracted from the content file
 {
+  warning("AssembleMultiTab is antiquated; it will be discontinued in later versions.")
   if(is.null(ansVars)) stop("Answer variables need to be specified.")
   if(quiet == TRUE & is.null(write.to)) warning("No output method selected: 'quiet' is TRUE and 'write.to' is NULL.")
 
