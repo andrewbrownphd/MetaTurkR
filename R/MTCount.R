@@ -29,7 +29,13 @@ MTCount <- function(results = NULL,
   #Input check
   if(is.null(results)) stop("Must declare 'results'.")
   if(is.null(counterQual)) stop("Must specify a counterQual to grant a count-based bonus.")
-  if(class(counterQual) != "character") stop("counterQual is not a string. Check input.")
+  if(class(counterQual) != "character") {
+    if(class(counterQual) == "factor") {
+      counterQual <- as.character(counterQual)
+    } else {
+      stop("counterQual is not a string. Check input.")
+    }
+  }
   if(length(counterQual) != 1) stop("Only one counterQual can be declared.")
   if(!(outType %in% c())) {
     warning("'outType' not specified. Defaulting to 'counted'.")
