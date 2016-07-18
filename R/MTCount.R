@@ -76,10 +76,9 @@ MTCount <- function(results = NULL,
                                    sandbox = sandbox)
 
   if(verbose){
-    message(paste(nrow(workerScore),
-                  "qualification counts updated for qualification",
+    message(paste("for qualification",
                   counterQual))
-    print("Scores\n")
+    print("Scores")
     print(workerScore[,c("WorkerId","Value","newCount")])
   }
 
@@ -89,7 +88,8 @@ MTCount <- function(results = NULL,
   {
     #Fix up the 'resultsAll' object with 'Counted' information
     countedAssignments <- results$AssignmentId[which(results$Counted)]
-    resultsAll$AssignmentStatus[which(resultsAll$AssignmentId %in% countedAssignments)] <- TRUE
+    resultsAll$Counted <- NA
+    resultsAll$Counted[which(resultsAll$AssignmentId %in% countedAssignments)] <- TRUE
     return(invisible(resultsAll))
   }
   if(outType == "counted")  return(invisible(results))
