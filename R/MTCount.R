@@ -89,7 +89,7 @@ MTCount <- function(results = NULL,
   {
     #Fix up the 'resultsAll' object with 'Counted' information
     countedAssignments <- results$AssignmentId[which(results$Counted)]
-    resultsAll$AssignmentStatus[which(resultsAll$AssignmentId %in% countedAssignments)] <- TRUE
+    resultsAll$Counted[which(resultsAll$AssignmentId %in% countedAssignments)] <- TRUE
     return(invisible(resultsAll))
   }
   if(outType == "counted")  return(invisible(results))
