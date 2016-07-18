@@ -21,7 +21,7 @@ MTCount(results = NULL, counterQual = NULL, countAll = FALSE,
 
 \item{verbose}{Logical. Whether to print additional messages or not.}
 
-\item{outType}{Either set to \code{"counted"} or \code{"full"}. If \code{"counted"},
+\item{outType}{String, case insensitive. Either set to \code{"counted"} or \code{"full"}. If \code{"counted"},
 only the newly counted subset will be returned. Default is \code{"full"}.}
 }
 \value{

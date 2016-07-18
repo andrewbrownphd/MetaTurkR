@@ -18,6 +18,7 @@
 
 MTApprove <- function(results=NULL,
                       feedback = "Thank you.",
+                      outType = "full",
                       sandbox=TRUE)
 {
   if(is.null(results)) stop("No results specified.")

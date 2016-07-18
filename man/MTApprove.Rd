@@ -4,7 +4,8 @@
 \alias{MTApprove}
 \title{Wrapper function for MTurkR::ApproveAssignment with error handling}
 \usage{
-MTApprove(results = NULL, feedback = "Thank you.", sandbox = TRUE)
+MTApprove(results = NULL, feedback = "Thank you.", outType = "full",
+  sandbox = TRUE)
 }
 \arguments{
 \item{results}{A results object returned from MTurk GetAssigment.}
@@ -12,7 +13,16 @@ MTApprove(results = NULL, feedback = "Thank you.", sandbox = TRUE)
 \item{feedback}{The response to give to the worker for approving their assignment.
 Default is \code{"Thank you."}.}
 
+\item{outType}{String, case insensitive. Either set to \code{"approved"} or \code{"full"}.
+If \code{"approved"}, only the newly counted subset will be returned. Default is \code{"full"}.}
+
 \item{sandbox}{Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.}
+}
+\value{
+If \code{outType = "full"}, function returns the original object with the column
+\code{AssignmentStatus} updated with \code{'ApprovedLocal'} if newly approved.
+If \code{outType="approved"}, function returns only the portion of the object newly approved, with
+the \code{AssignmentStatus} column appropriately updated.
 }
 \description{
 This function approves assignments passed to it from a \code{results} object passed to it from
