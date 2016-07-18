@@ -8,7 +8,8 @@ MTScoreAssignments(results = NULL, answers = NULL,
   howToScore = "relativeTotal", scoreQual = NULL, counterQual = NULL,
   updateQuals = FALSE, pointsPerHIT = 10000, pointsPerQ = 1,
   questionNames = NULL, scoreNAsAs = "wrong", NAValue = NULL,
-  approve = FALSE, outType = "sub", sandbox = TRUE, verbose = FALSE)
+  approve = FALSE, feedback = "Thank you.", outType = "sub",
+  sandbox = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{results}{A results object returned from MTurk.}
@@ -22,9 +23,7 @@ If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be
 
 \item{scoreQual}{The qualification ID string that identifies the score qualification for this HIT.}
 
-\item{counterQual}{The qualification ID string that identifies the counter qualification for this#'\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
-'answers'. The rows in this data frame will be used to map the columns of results
-to the columns in answers.}
+\item{counterQual}{The qualification ID string that identifies the counter qualification for this HIT.}
 
 \item{updateQuals}{Logical for whether to update qualification values after scoring assignments.}
 
@@ -52,8 +51,10 @@ Needed for call to \code{MTScoreAnswers}.}
 \item{NAValue}{The value to replace NAs with. Needed for call to \code{MTScoreAnswers}.}
 
 \item{approve}{Logical. Whether to approve assignments after counting. This will return the \code{results} object,
-but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
+but with \code{AssignmentStatus} set to \code{"ApprovedLocal"}. This prevents needing to refetch \code{results} to continue
 working with the results. Default is \code{FALSE}.}
+
+\item{feedback}{Text to send to the worker when approved. Default is \code{"Thank you"}.}
 
 \item{outType}{Either set to \code{"sub"} or \code{"full"}. If \code{"sub"},
 only the newly evaluated subset will be returned.}
@@ -63,7 +64,7 @@ only the newly evaluated subset will be returned.}
 \item{verbose}{Logical. Whether to print additional messages or not.}
 }
 \value{
-Returns the scored subset ofthe inputted \code{results} object appended with scores.
+Returns the scored subset of the inputted \code{results} object appended with scores.
 If \code{approve = TRUE}, it will change the "AssignmentStatus" to "ApprovedLocal".
 }
 \description{

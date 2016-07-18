@@ -10,9 +10,7 @@
 #' @param howToScore String with a value of \code{"runningTotal"} or \code{"relativeTotal"} (default).
 #' If \code{"relativeTotal"}, \code{counterQual} and \code{pointsPerHIT} need to be defined.
 #' @param scoreQual The qualification ID string that identifies the score qualification for this HIT.
-#' @param counterQual The qualification ID string that identifies the counter qualification for this#'\code{questionNames} can take a \code{data.frame} with colnames of 'results' and
-#' 'answers'. The rows in this data frame will be used to map the columns of results
-#' to the columns in answers.
+#' @param counterQual The qualification ID string that identifies the counter qualification for this HIT.
 #' @param updateQuals Logical for whether to update qualification values after scoring assignments.
 #' @param pointsPerHIT How many points each assignment is worth. Default is 10,000
 #' because MTurk does not take decimal values. This is equivalent to percent with 2
@@ -33,14 +31,15 @@
 #' Needed for call to \code{MTScoreAnswers}.
 #' @param NAValue The value to replace NAs with. Needed for call to \code{MTScoreAnswers}.
 #' @param approve Logical. Whether to approve assignments after counting. This will return the \code{results} object,
-#' but with \code{AssignmentStatus} set to \code{ApprovedLocal}. This prevents needing to refetch \code{results} to continue
+#' but with \code{AssignmentStatus} set to \code{"ApprovedLocal"}. This prevents needing to refetch \code{results} to continue
 #' working with the results. Default is \code{FALSE}.
+#' @param feedback Text to send to the worker when approved. Default is \code{"Thank you"}.
 #' @param outType Either set to \code{"sub"} or \code{"full"}. If \code{"sub"},
 #' only the newly evaluated subset will be returned.
 #' @param sandbox Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.
 #' @param verbose Logical. Whether to print additional messages or not.
 #'
-#' @return Returns the scored subset ofthe inputted \code{results} object appended with scores.
+#' @return Returns the scored subset of the inputted \code{results} object appended with scores.
 #' If \code{approve = TRUE}, it will change the "AssignmentStatus" to "ApprovedLocal".
 #'
 MTScoreAssignments <- function(results = NULL,
@@ -55,6 +54,7 @@ MTScoreAssignments <- function(results = NULL,
                                scoreNAsAs = "wrong",
                                NAValue = NULL,
                                approve = FALSE,
+                               feedback = "Thank you.",
                                outType = "sub",
                                sandbox = TRUE,
                                verbose = FALSE
@@ -171,56 +171,20 @@ MTScoreAssignments <- function(results = NULL,
     }
   }
 
-  approveFnxn <- function(resultsSub, sandbox, r){
-    approve <- tryCatch({
-      MTurkR::ApproveAssignment(resultsSub$AssignmentId[r],
-                                feedback = "Approval recognizes your completion of the task, not necessarily that the answers were correct. Thank you.",
-                                sandbox = sandbox)
-      resultsSub$AssignmentStatus[r] <- "ApprovedLocal"
-    },
-    error = function(e) {
-      if(grepl("Timeout was reached",e)) {
-        print(paste(e,". Trying again for assignment",resultsSub$AssignmentId[r]))
-        resultsSub <- approveFnxn(resultsSub, sandbox ,r)
-        resultsSub$AssignmentStatus[r] <- "ApprovedLocal"
-      } else {
-        stop(e)
-      }
-    },
-    warning = function(w) {
-      if(grepl("Invalid Request for", w)){
-        warning(paste("Assignment", resultsSub$AssignmentId[r], "invalid request; possibly already approved?"))
-      } else {
-        warning(w)
-      }
-    },
-    message = function(m){
-      if(grepl("not valid for API request", m)){
-        warning(paste("Assignment", resultsSub$AssignmentId[r], "invalid request; possibly already approved?"))
-      } else {
-        m
-      }
-    },
-    finally = {
-      return(resultsSub)
-    }
-    )
-  }
   #Approve assignments and mark assignments as approved locally
   if(approve) {
-    #Do one at a time to catch errors; probably slower, but not slower than dealing with errors mid stream
-    for(r in 1:nrow(resultsSub)){
-      resultsSub <- approveFnxn(resultsSub, sandbox, r)
-    }
+    resultsSub <- MTApprove(results = resultsSub,
+                            feedback = feedback,
+                            sandbox = sandbox)
   }
 
   if(!approve & updateQuals) resultsSub$AssignmentStatus <- "QualsUpdatedButNotApproved"
 
   if(approve & !updateQuals) resultsSub$AssignmentStatus <- "QualsNotUpdatedButApproved"
 
-  if(outType == "sub") return(resultsSub)
-  if(outType == "full") return(merge(results,
-                                     resultsSub[,c("AssignmentId","score")],
-                                     by = "AssignmentId",
-                                     all = TRUE))
+  if(outType == "sub") return(invisible(resultsSub))
+  if(outType == "full") return(invisible(merge(results,
+                                               resultsSub[,c("AssignmentId","score")],
+                                               by = "AssignmentId",
+                                               all = TRUE)))
 }

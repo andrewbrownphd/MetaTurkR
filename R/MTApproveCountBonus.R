@@ -2,6 +2,7 @@ MTApproveCountBonus <- function(results=NULL, sandbox=TRUE,
                                 bonusThreshold=NULL, bonusAmount=NULL,
                                 qualType=NULL)
 {
+  warning("Obsolete function; included for legacy compatibility.")
   if(is.null(results)) stop("Must declare results to approve.")
   if(is.null(bonusThreshold) != is.null(bonusAmount)) stop("Must set both or neither bonus parameters.")
   if(!is.null(bonusThreshold) & is.null(qualType)) stop("Must specify a qualType to grant a bonus.")

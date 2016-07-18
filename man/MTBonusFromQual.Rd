@@ -5,23 +5,23 @@
 \title{A convenience function to apply bonuses based on qualification scores.}
 \usage{
 MTBonusFromQual(HITTypeId = NULL, workerIds = NULL, assignmentIds = NULL,
-  HITSet = NULL, quals = NULL, bonusThresholds = NULL,
-  bonusAmount = NULL, emailText = NULL, sandbox = TRUE, verbose = FALSE,
-  confirm = TRUE)
+  results = NULL, quals = NULL, bonusThresholds = NULL,
+  bonusAmount = NULL, reason = "Thank you for completing these HITs!",
+  sandbox = TRUE, verbose = FALSE, confirm = TRUE)
 }
 \arguments{
 \item{HITTypeId}{A single HITTypeId. \code{"HITTypeId", "workerIds", and "assignmentIds"}
-XOR \code{"HITSet"} must be specified.}
+XOR \code{"results"} must be specified.}
 
 \item{workerIds}{A single WorkerId or vector of WorkerIds. \code{"HITTypeId", "workerIds", and "assignmentIds"}
-XOR \code{"HITSet"} must be specified.}
+XOR \code{"results"} must be specified.}
 
 \item{assignmentIds}{A single AssignmentId or vector of AssignmentIds. If specified, must be the
 same length as \code{"workerIds"}. \code{"HITTypeId", "workerIds", and "assignmentIds"}
-XOR \code{"HITSet"} must be specified.}
+XOR \code{"results"} must be specified.}
 
-\item{HITSet}{A data.frame returned from assignments returned by MTurk. \code{"HITTypeId", "workerIds", and "assignmentIds"}
-XOR \code{"HITSet"} must be specified.}
+\item{results}{A data.frame returned from assignments returned by MTurk. \code{"HITTypeId", "workerIds", and "assignmentIds"}
+XOR \code{"results"} must be specified.}
 
 \item{quals}{A single QualificationId or vector of QualificationIds.}
 
@@ -31,8 +31,8 @@ to the threshold amount. Must be \code{numeric}.}
 
 \item{bonusAmount}{The amount of money, in dollars, to be given to each worker.}
 
-\item{emailText}{The text of an email to send to the workers. Default is \code{NULL}, which
-results in text of "Thank you for completing these HITs!"}
+\item{reason}{The reason to send the workers for receiving the bonus.
+Default is \code{"Thank you for completing these HITs!"}.}
 
 \item{sandbox}{Default is \code{TRUE}. Defines whether to work on live or sandbox Mechanical Turk site.}
 
