@@ -65,7 +65,7 @@ MTCount <- function(results = NULL,
 
   for(w in uniqueWorkers){
     r <- which(workerScore$WorkerId == w)
-    workerScore$newCount[r] <- workerScore$Value[r] + addCount[w]
+    workerScore$newCount[r] <- as.numeric(workerScore$Value[r]) + addCount[w]
   }
 
   MTurkR::UpdateQualificationScore(qual = counterQual,
