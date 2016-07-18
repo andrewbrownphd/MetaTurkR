@@ -11,7 +11,7 @@
 #' \code{results} object titled 'Counted' containing values of \code{TRUE}, these will not be counted.
 #' @param sandbox Logical. Whether to use the sandbox (\code{TRUE}) or not; default is \code{TRUE}.
 #' @param verbose Logical. Whether to print additional messages or not.
-#' @param outType Either set to \code{"counted"} or \code{"full"}. If \code{"counted"},
+#' @param outType String, case insensitive. Either set to \code{"counted"} or \code{"full"}. If \code{"counted"},
 #' only the newly counted subset will be returned. Default is \code{"full"}.
 
 #' @return If \code{outType = "full"}, function returns the original object with a column titled
@@ -37,7 +37,9 @@ MTCount <- function(results = NULL,
     }
   }
   if(length(counterQual) != 1) stop("Only one counterQual can be declared.")
-  if(!(outType %in% c())) {
+
+  outType <- tolower(outType)
+  if(!(outType %in% c("full","counted"))) {
     warning("'outType' not specified. Defaulting to 'counted'.")
     outType <- "counted"
   }
@@ -65,7 +67,7 @@ MTCount <- function(results = NULL,
 
   for(w in uniqueWorkers){
     r <- which(workerScore$WorkerId == w)
-    workerScore$newCount[r] <- workerScore$Value[r] + addCount[w]
+    workerScore$newCount[r] <- as.numeric(workerScore$Value[r]) + addCount[w]
   }
 
   MTurkR::UpdateQualificationScore(qual = counterQual,
