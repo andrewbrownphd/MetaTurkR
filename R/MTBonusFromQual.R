@@ -134,7 +134,10 @@ MTBonusFromQual <- function(HITTypeId = NULL,
         MTurkR::GetQualificationScore(qual=criteriaQuals[i],
                                       workers=results$WorkerId,
                                       sandbox=sandbox)))
-      if(verbose) print(workerQuals)
+      if(verbose) {
+        message("Workers and scores without bonuses yet:")
+        print(workerQuals)
+      }
       workerIds <- workerQuals$WorkerId[which(as.numeric(workerQuals$Value) >= criteriaThresholds[i])]
       results <- merge(results,
                        workerQuals[,c("WorkerId","Value")],
@@ -149,8 +152,8 @@ MTBonusFromQual <- function(HITTypeId = NULL,
 
   #Apply bonuses if any are eligible
   if(nrow(results) > 0){
-    print(paste(nrow(results),"bonuses will be assigned, at a total direct cost of",
-                nrow(results) * bonusAmount,"."))
+    print(paste0(nrow(results)," bonuses will be assigned, at a total direct cost of $",
+                 nrow(results) * bonusAmount,"."))
     MTConfirm(confirm = confirm)
 
     #Run this code for future flexibility, rather than just jumping straight to 'assignqual'
