@@ -113,7 +113,7 @@ MTBonusFromQual <- function(HITTypeId = NULL,
                                   sandbox=sandbox)))
   existingBonuses <- workerBonuses$WorkerId[which(workerBonuses$Value > 0)]
 
-  if(nrow(existingBonuses) == 0){
+  if(length(existingBonuses) == 0){
     if(verbose) message("No existing bonuses.")
   } else {
     if(verbose){
