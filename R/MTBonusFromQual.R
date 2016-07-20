@@ -13,10 +13,11 @@
 #' XOR \code{"results"} must be specified.
 #' @param results A data.frame returned from assignments returned by MTurk. \code{"HITTypeId", "workerIds", and "assignmentIds"}
 #' XOR \code{"results"} must be specified.
-#' @param quals A single QualificationId or vector of QualificationIds.
-#' @param bonusThresholds A single bonus threshold or vector of bonus thresholds. Must be the same
-#' length as \code{quals}. The threshold means the worker must have a value greater than or equal
+#' @param criteriaQuals A single QualificationId or vector of QualificationIds.
+#' @param criteriaThresholds A single bonus threshold or vector of bonus thresholds. Must be the same
+#' length as \code{criteriaQuals}. The threshold means the worker must have a value greater than or equal
 #' to the threshold amount. Must be \code{numeric}.
+#' @param bonusQual The qualification ID for a qualification that counts how many bonuses have been given.
 #' @param bonusAmount The amount of money, in dollars, to be given to each worker.
 #' @param reason The reason to send the workers for receiving the bonus.
 #' Default is \code{"Thank you for completing these HITs!"}.
@@ -35,24 +36,26 @@
 #' @return Returns the WorkerIds of workers given the bonuses, or an invisible \code{NULL} if none
 #' granted.
 #'
-MTBonusFromQual <- function(HITTypeId=NULL,
-                            workerIds=NULL,
+MTBonusFromQual <- function(HITTypeId = NULL,
+                            workerIds = NULL,
                             assignmentIds = NULL,
                             results = NULL,
-                            quals=NULL,
-                            bonusThresholds=NULL,
-                            bonusAmount=NULL,
-                            reason="Thank you for completing these HITs!",
-                            sandbox=TRUE,
+                            criteriaQuals = NULL,
+                            criteriaThresholds = NULL,
+                            bonusQual = NULL,
+                            bonusAmount = NULL,
+                            reason = "Thank you for completing these HITs!",
+                            sandbox = TRUE,
                             verbose = FALSE,
                             confirm = TRUE)
 {
-  if(class(quals) != "character") stop("quals must be a string or vector of strings.")
+  if(class(criteriaQuals) != "character") stop("'criteriaQuals' must be a string or vector of strings.")
   if(class(reason) != "character") stop("'reason' must be a string.")
-  if(is.null(bonusThresholds) | is.null(bonusAmount)) stop("Must set both bonus parameters.")
-  if(is.null(quals)) stop("Must specify at least one qual as the criterion to grant a bonus.")
-  if(length(bonusThresholds) != length(quals)) stop("bonusThresholds must be specified for each qual.")
-  if(class(bonusThresholds) != "numeric") stop("bonusThresholds must be numeric.")
+  if(is.null(criteriaThresholds) | is.null(bonusAmount)) stop("Must set both bonus parameters.")
+  if(is.null(criteriaQuals)) stop("Must specify at least one qual as the criterion to grant a bonus.")
+  if(length(criteriaThresholds) != length(criteriaQuals)) stop("criteriaThresholds must be specified for each qual.")
+  if(class(criteriaThresholds) != "numeric") stop("criteriaThresholds must be numeric.")
+  if(is.null(bonusQual)) stop("'bonusQual' not specified.")
 
   if(is.null(results) & (is.null(HITTypeId) | is.null(workerIds) | is.null(assignmentIds)))
     stop("Must define HITTypeId, workerIds, and assignmentsIds; or
@@ -69,10 +72,10 @@ MTBonusFromQual <- function(HITTypeId=NULL,
     HITTypeId <- unique(as.character(results$HITTypeId))
     workerIds <- unique(as.character(results$WorkerId))
     results <- data.frame(WorkerId = workerIds,
-                         AssignmentId = sapply(workerIds,
-                                               function(w)
-                                                 as.character(tail(results$AssignmentId[which(results$WorkerId == w)],
-                                                                   n=1))))
+                          AssignmentId = sapply(workerIds,
+                                                function(w)
+                                                  as.character(tail(results$AssignmentId[which(results$WorkerId == w)],
+                                                                    n=1))))
   } else {
     if(length(workerIds) != length(unique(workerIds))) stop("Duplicated WorkerId in workerIds.")
 
@@ -81,16 +84,36 @@ MTBonusFromQual <- function(HITTypeId=NULL,
     if(class(HITTypeId) == "factor") HITTypeId <- as.character(HITTypeId)
     #Create results data.frame
     results <- data.frame(WorkerId = workerIds,
-                         AssignmentId = assignmentIds)
+                          AssignmentId = assignmentIds)
   }
 
   if(length(HITTypeId) > 1) stop("Only one HITTypeId can be specified.")
 
-  #get existing bonuses (expand to allow repeated bonuses?)
-  existingBonuses <- suppressMessages(MTurkR::GetBonuses(hit.type = HITTypeId,
-                                                         return.all = TRUE,
-                                                         sandbox = sandbox))
-  if(length(existingBonuses) == 0){
+  ##The following code only works for non-disposed HITs...
+  # #get existing bonuses (expand to allow repeated bonuses?)
+  # existingBonuses <- suppressMessages(MTurkR::GetBonuses(hit.type = HITTypeId,
+  #                                                        return.all = TRUE,
+  #                                                        sandbox = sandbox))
+  #
+  #   if(length(existingBonuses) == 0){
+  #     if(verbose) message("No existing bonuses.")
+  #   } else {
+  #     if(verbose){
+  #       message("Existing bonuses:")
+  #       print(existingBonuses)
+  #     }
+  #     #exclude workerIds that already have bonuses
+  #     exc <- results$WorkerId %in% existingBonuses$WorkerId
+  #     results <- results[!exc,]
+  #   }
+
+  workerBonuses <- suppressWarnings(suppressMessages(
+    MTurkR::GetQualificationScore(qual=bonusQual,
+                                  workers=results$WorkerId,
+                                  sandbox=sandbox)))
+  existingBonuses <- workerBonuses$WorkerId[which(workerBonuses$Value > 0)]
+
+  if(nrow(existingBonuses) == 0){
     if(verbose) message("No existing bonuses.")
   } else {
     if(verbose){
@@ -98,23 +121,25 @@ MTBonusFromQual <- function(HITTypeId=NULL,
       print(existingBonuses)
     }
     #exclude workerIds that already have bonuses
-    exc <- results$WorkerId %in% existingBonuses$WorkerId
+    exc <- results$WorkerId %in% existingBonuses
     results <- results[!exc,]
   }
 
   #Loop through qualification requirements
-  for(i in 1:length(quals)){
+  for(i in 1:length(criteriaQuals)){
     if(nrow(results) > 0){
       #Get Counter values
       #Warnings and messages suppressed because sometimes workers do not have the qual
       workerQuals <- suppressWarnings(suppressMessages(
-        MTurkR::GetQualificationScore(qual=quals[i],
+        MTurkR::GetQualificationScore(qual=criteriaQuals[i],
                                       workers=results$WorkerId,
                                       sandbox=sandbox)))
       if(verbose) print(workerQuals)
-      workerIds <- workerQuals$WorkerId[which(as.numeric(workerQuals$Value) >= bonusThresholds[i])]
-      results <- merge(results,workerQuals[,c("WorkerId","Value")], by="WorkerId")
-      colnames(results)[which(colnames(results) == "Value")] <- quals[i]
+      workerIds <- workerQuals$WorkerId[which(as.numeric(workerQuals$Value) >= criteriaThresholds[i])]
+      results <- merge(results,
+                       workerQuals[,c("WorkerId","Value")],
+                       by="WorkerId")
+      colnames(results)[which(colnames(results) == "Value")] <- criteriaQuals[i]
       results <- results[which(results$WorkerId %in% workerIds),]
     } else {
       message("No bonuses to be given in this set of workerIds.")
@@ -128,6 +153,16 @@ MTBonusFromQual <- function(HITTypeId=NULL,
                 nrow(results) * bonusAmount,"."))
     MTConfirm(confirm = confirm)
 
+    #Run this code for future flexibility, rather than just jumping straight to 'assignqual'
+    MTGetOrInitiateQualification(workerIds = results$WorkerId,
+                                 qualId = bonusQual,
+                                 sandbox = sandbox)
+
+    #expand here to allow multiple bonuses for a HITType? use UpdateQual?
+    tmp <- MTurkR::UpdateQualificationScore(qual = bonusQual,
+                                            workers = results$WorkerId,
+                                            value = "1",
+                                            sandbox = sandbox)
     for(r in 1:nrow(results))
     {
       MTurkR::GrantBonus(workers=results$WorkerId[r],

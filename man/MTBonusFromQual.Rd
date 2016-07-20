@@ -5,9 +5,10 @@
 \title{A convenience function to apply bonuses based on qualification scores.}
 \usage{
 MTBonusFromQual(HITTypeId = NULL, workerIds = NULL, assignmentIds = NULL,
-  results = NULL, quals = NULL, bonusThresholds = NULL,
-  bonusAmount = NULL, reason = "Thank you for completing these HITs!",
-  sandbox = TRUE, verbose = FALSE, confirm = TRUE)
+  results = NULL, criteriaQuals = NULL, criteriaThresholds = NULL,
+  bonusQual = NULL, bonusAmount = NULL,
+  reason = "Thank you for completing these HITs!", sandbox = TRUE,
+  verbose = FALSE, confirm = TRUE)
 }
 \arguments{
 \item{HITTypeId}{A single HITTypeId. \code{"HITTypeId", "workerIds", and "assignmentIds"}
@@ -23,11 +24,13 @@ XOR \code{"results"} must be specified.}
 \item{results}{A data.frame returned from assignments returned by MTurk. \code{"HITTypeId", "workerIds", and "assignmentIds"}
 XOR \code{"results"} must be specified.}
 
-\item{quals}{A single QualificationId or vector of QualificationIds.}
+\item{criteriaQuals}{A single QualificationId or vector of QualificationIds.}
 
-\item{bonusThresholds}{A single bonus threshold or vector of bonus thresholds. Must be the same
-length as \code{quals}. The threshold means the worker must have a value greater than or equal
+\item{criteriaThresholds}{A single bonus threshold or vector of bonus thresholds. Must be the same
+length as \code{criteriaQuals}. The threshold means the worker must have a value greater than or equal
 to the threshold amount. Must be \code{numeric}.}
+
+\item{bonusQual}{The qualification ID for a qualification that counts how many bonuses have been given.}
 
 \item{bonusAmount}{The amount of money, in dollars, to be given to each worker.}
 

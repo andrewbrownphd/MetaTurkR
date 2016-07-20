@@ -17,11 +17,11 @@
 #' If \code{outType="approved"}, function returns only the portion of the object newly approved, with
 #' the \code{AssignmentStatus} column appropriately updated.
 
-MTApproveMTApprove <- function(results=NULL,
-                               feedback = "Thank you.",
-                               outType = "full",
-                               verbose = TRUE,
-                               sandbox=TRUE)
+MTApprove <- function(results=NULL,
+                      feedback = "Thank you.",
+                      outType = "full",
+                      verbose = TRUE,
+                      sandbox=TRUE)
 {
   if(is.null(results)) stop("No results specified.")
 
